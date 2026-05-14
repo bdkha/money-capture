@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PolarChart, Pie } from 'victory-native';
-import { MonthlySummary, CATEGORIES } from '../types';
-import { Colors, Spacing, Radii } from '../theme';
+import { MonthlySummary, CATEGORIES } from '../../../shared/types';
+import { Colors, Spacing, Radii } from '../../../shared/theme';
 
 interface CategoryPieChartProps {
   summary: MonthlySummary;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { CartesianChart, Bar } from 'victory-native';
-import { MonthlySummary } from '../types';
-import { Colors, Spacing } from '../theme';
+import { MonthlySummary } from '../../../shared/types';
+import { Colors, Spacing } from '../../../shared/theme';
 
 interface MonthlyBarChartProps {
   summary: MonthlySummary;

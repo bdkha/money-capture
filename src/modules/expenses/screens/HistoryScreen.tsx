@@ -13,8 +13,8 @@ import { isToday, isYesterday, format, parseISO } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
 import { useExpenses } from '../hooks/useExpenses';
 import ExpenseCard from '../components/ExpenseCard';
-import { Expense } from '../types';
-import { Colors, Spacing } from '../theme';
+import { Expense } from '../../../shared/types';
+import { Colors, Spacing } from '../../../shared/theme';
 
 function sectionTitle(dateStr: string): string {
   const d = parseISO(dateStr);

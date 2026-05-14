@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { Colors, Typography } from '../theme';
+import { Colors, Typography } from '../../../shared/theme';
 
 interface AmountInputProps {
   value: string;

@@ -10,12 +10,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, addMonths, subMonths, parseISO } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
-import { useExpenses } from '../hooks/useExpenses';
+import { useExpenses } from '../../expenses/hooks/useExpenses';
 import { useMonthlySummary } from '../hooks/useMonthlySummary';
 import SummaryCard from '../components/SummaryCard';
 import MonthlyBarChart from '../components/MonthlyBarChart';
 import CategoryPieChart from '../components/CategoryPieChart';
-import { Colors, Spacing } from '../theme';
+import { Colors, Spacing } from '../../../shared/theme';
 
 export default function SummaryScreen() {
   const insets = useSafeAreaInsets();
