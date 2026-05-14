@@ -1,0 +1,75 @@
+name: Build APK Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - preview
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up Expo and EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Determine build profile
+        id: profile
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.profile }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build APK via EAS
+        run: |
+          eas build \
+            --platform android \
+            --profile ${{ steps.profile.outputs.name }} \
+            --non-interactive \
+            --wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Get APK download URL
+        if: success()
+        run: |
+          URL=$(eas build:list \
+            --platform android \
+            --status finished \
+            --limit 1 \
+            --non-interactive \
+            --json | python3 -c "import json,sys; builds=json.load(sys.stdin); print(builds[0]['artifacts']['buildUrl'])" 2>/dev/null || echo "")
+          if [ -n "$URL" ]; then
+            echo "### APK Download" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "[$URL]($URL)" >> $GITHUB_STEP_SUMMARY
+          fi
