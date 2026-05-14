@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Expense, Category, MonthlySummary, CATEGORIES } from '../types';
+import { Expense, Category, MonthlySummary, CATEGORIES } from '../../../shared/types';
 
 export function useMonthlySummary(expenses: Expense[], month: string): MonthlySummary {
   return useMemo(() => {

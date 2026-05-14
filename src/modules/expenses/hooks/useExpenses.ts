@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Expense } from '../types';
+import { Expense } from '../../../shared/types';
 import { loadExpenses, deleteExpense } from '../storage/expenseStorage';
-import { deletePhoto } from '../storage/photoStorage';
+import { deletePhoto } from '../../camera/storage/photoStorage';
 
 export function useExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);

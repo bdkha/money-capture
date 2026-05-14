@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { Expense } from '../types';
-import { Colors, Spacing, Radii } from '../theme';
+import { Expense } from '../../../shared/types';
+import { Colors, Spacing, Radii } from '../../../shared/theme';
 
 interface ExpenseCardProps {
   expense: Expense;

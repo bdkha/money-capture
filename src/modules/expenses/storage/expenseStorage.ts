@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Expense } from '../types';
+import { Expense } from '../../../shared/types';
 
 const STORAGE_KEY = '@money_capture:expenses';
 

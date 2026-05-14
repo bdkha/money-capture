@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
-import { Category } from '../types';
-import { Colors, Radii, Spacing } from '../theme';
+import { Category } from '../../../shared/types';
+import { Colors, Radii, Spacing } from '../../../shared/theme';
 
 interface CategoryPillProps {
   category: Category;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Spacing, Radii } from '../theme';
+import { Colors, Spacing, Radii } from '../../../shared/theme';
 
 interface SummaryCardProps {
   totalCents: number;

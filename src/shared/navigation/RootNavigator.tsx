@@ -3,10 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme';
-import CameraScreen from '../screens/CameraScreen';
-import HistoryScreen from '../screens/HistoryScreen';
-import SummaryScreen from '../screens/SummaryScreen';
-import PreviewScreen from '../screens/PreviewScreen';
+import CameraScreen from '../../modules/camera/screens/CameraScreen';
+import HistoryScreen from '../../modules/expenses/screens/HistoryScreen';
+import SummaryScreen from '../../modules/summary/screens/SummaryScreen';
+import PreviewScreen from '../../modules/expenses/screens/PreviewScreen';
 
 export type RootStackParamList = {
   Tabs: undefined;

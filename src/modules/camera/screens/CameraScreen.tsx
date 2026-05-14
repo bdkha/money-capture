@@ -12,8 +12,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import ShutterButton from '../components/ShutterButton';
-import { Colors, Spacing } from '../theme';
-import { RootStackParamList } from '../navigation/RootNavigator';
+import { Colors, Spacing } from '../../../shared/theme';
+import { RootStackParamList } from '../../../shared/navigation/RootNavigator';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 

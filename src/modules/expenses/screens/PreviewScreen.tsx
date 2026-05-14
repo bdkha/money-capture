@@ -17,11 +17,11 @@ import { format } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 import AmountInput from '../components/AmountInput';
 import CategoryPicker from '../components/CategoryPicker';
-import { Colors, Spacing, Radii } from '../theme';
-import { Category, Expense } from '../types';
+import { Colors, Spacing, Radii } from '../../../shared/theme';
+import { Category, Expense } from '../../../shared/types';
 import { addExpense } from '../storage/expenseStorage';
-import { copyPhotoToStorage } from '../storage/photoStorage';
-import { RootStackParamList } from '../navigation/RootNavigator';
+import { copyPhotoToStorage } from '../../camera/storage/photoStorage';
+import { RootStackParamList } from '../../../shared/navigation/RootNavigator';
 
 type PreviewRoute = RouteProp<RootStackParamList, 'Preview'>;
 

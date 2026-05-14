@@ -2,8 +2,8 @@ import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import RootNavigator from './src/navigation/RootNavigator';
-import { Colors } from './src/theme';
+import RootNavigator from './src/shared/navigation/RootNavigator';
+import { Colors } from './src/shared/theme';
 
 const customDarkTheme = {
   ...DarkTheme,

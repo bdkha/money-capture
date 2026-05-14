@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Category, CATEGORIES } from '../types';
-import { Spacing } from '../theme';
+import { Category, CATEGORIES } from '../../../shared/types';
+import { Spacing } from '../../../shared/theme';
 import CategoryPill from './CategoryPill';
 
 interface CategoryPickerProps {
