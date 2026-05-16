@@ -1,2 +1,2 @@
-export { default as SummaryScreen } from './screens/SummaryScreen';
+export { default as StatsScreen } from './screens/StatsScreen';
 export { useMonthlySummary } from './hooks/useMonthlySummary';

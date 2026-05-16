@@ -1,34 +1,46 @@
 export type Category =
-  | 'Food'
-  | 'Transport'
-  | 'Shopping'
-  | 'Bills'
-  | 'Entertainment'
-  | 'Health'
-  | 'Other';
+  | 'Cafe'
+  | 'Ăn uống'
+  | 'Mua sắm'
+  | 'Đi lại'
+  | 'Vui chơi'
+  | 'Nhà';
 
 export const CATEGORIES: Category[] = [
-  'Food',
-  'Transport',
-  'Shopping',
-  'Bills',
-  'Entertainment',
-  'Health',
-  'Other',
+  'Cafe',
+  'Ăn uống',
+  'Mua sắm',
+  'Đi lại',
+  'Vui chơi',
+  'Nhà',
 ];
+
+export type Mood = '😊' | '😋' | '😂' | '😤' | '😴';
 
 export interface Expense {
   id: string;
-  amount: number; // stored in cents (integer)
+  amount: number; // whole VND (đồng)
   category: Category;
   note: string;
-  date: string; // 'YYYY-MM-DD'
-  photoUri: string; // permanent path in FileSystem.documentDirectory
-  createdAt: string; // ISO timestamp for sorting
+  date: string;      // 'YYYY-MM-DD'
+  photoUri: string;
+  createdAt: string; // ISO timestamp
+  mood?: Mood;
 }
 
 export interface MonthlySummary {
   month: string; // 'YYYY-MM'
   totalCents: number;
-  byCategory: Record<Category, number>; // cents per category
+  byCategory: Record<Category, number>;
+}
+
+export interface CategoryBudget {
+  category: Category;
+  capCents: number;
+}
+
+export interface MonthBudget {
+  month: string; // 'YYYY-MM'
+  totalCapCents: number;
+  categories: CategoryBudget[];
 }

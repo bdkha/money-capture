@@ -1,7 +1,8 @@
-import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Category } from '../../../shared/types';
-import { Colors, Radii, Spacing } from '../../../shared/theme';
+import { CATEGORY_META, Radii, FontNames } from '../../../shared/theme';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
 
 interface CategoryPillProps {
   category: Category;
@@ -9,52 +10,61 @@ interface CategoryPillProps {
   onPress: () => void;
 }
 
-const EMOJI: Record<Category, string> = {
-  Food: '🍜',
-  Transport: '🚌',
-  Shopping: '🛍',
-  Bills: '📄',
-  Entertainment: '🎬',
-  Health: '💊',
-  Other: '📦',
-};
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: Radii.full,
+      borderWidth: 1.5,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      gap: 4,
+      marginRight: 8,
+    },
+    emoji: {
+      fontSize: 14,
+    },
+    label: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 13,
+    },
+  });
+}
 
 export default function CategoryPill({ category, selected, onPress }: CategoryPillProps) {
-  const color = Colors.categories[category];
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const meta = CATEGORY_META[category];
+  const { color, emoji } = meta;
+
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.7}
       style={[
         styles.pill,
         selected
-          ? { backgroundColor: color, borderColor: color }
-          : { backgroundColor: Colors.surface, borderColor: Colors.border },
+          ? {
+              backgroundColor: `${color}33`,
+              borderColor: color,
+            }
+          : {
+              backgroundColor: colors.ink1,
+              borderColor: colors.ink2,
+            },
       ]}
     >
-      <Text style={styles.emoji}>{EMOJI[category]}</Text>
-      <Text style={[styles.label, { color: selected ? '#000' : Colors.textSecondary }]}>
+      <Text style={styles.emoji}>{emoji}</Text>
+      <Text
+        style={[
+          styles.label,
+          { color: selected ? color : colors.inkTextSecondary },
+        ]}
+      >
         {category}
       </Text>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: Radii.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
-    gap: Spacing.xs,
-    marginRight: Spacing.sm,
-  },
-  emoji: {
-    fontSize: 14,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-});

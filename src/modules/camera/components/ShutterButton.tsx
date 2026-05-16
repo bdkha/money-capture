@@ -1,20 +1,35 @@
-import React, { useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import React from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ShutterButtonProps {
   onPress: () => void;
   disabled?: boolean;
 }
 
-export default function ShutterButton({ onPress, disabled }: ShutterButtonProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function ShutterButton({ onPress, disabled = false }: ShutterButtonProps) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: disabled ? 0.4 : 1,
+  }));
 
   const handlePressIn = () => {
-    Animated.spring(scale, { toValue: 0.88, useNativeDriver: true, speed: 30 }).start();
+    scale.value = withSpring(0.88, { damping: 15, stiffness: 300 });
   };
 
   const handlePressOut = () => {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20 }).start();
+    scale.value = withSpring(1, { damping: 12, stiffness: 200 });
   };
 
   return (
@@ -23,32 +38,40 @@ export default function ShutterButton({ onPress, disabled }: ShutterButtonProps)
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={styles.wrapper}
+      accessibilityRole="button"
+      accessibilityLabel="Chụp ảnh"
     >
-      <Animated.View style={[styles.outer, { transform: [{ scale }], opacity: disabled ? 0.4 : 1 }]}>
-        <View style={styles.inner} />
+      <Animated.View style={[styles.outerRing, animatedStyle]}>
+        <LinearGradient
+          colors={['#FF9A70', '#FF6B35']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.innerGradient}
+        />
       </Animated.View>
     </Pressable>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  outer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 4,
-    borderColor: 'rgba(255,255,255,0.6)',
+  outerRing: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 3,
+    borderColor: 'rgba(255,107,53,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  inner: {
+  innerGradient: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#FFFFFF',
   },
 });
