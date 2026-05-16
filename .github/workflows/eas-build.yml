@@ -31,7 +31,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --force
 
       # expo-github-action installs expo-cli and eas-cli, and authenticates
       # using EXPO_TOKEN so every subsequent eas command is already logged in.
