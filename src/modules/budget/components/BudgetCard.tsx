@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { format, getDaysInMonth, getDate, parseISO } from 'date-fns';
+import { format, getDaysInMonth, parseISO } from 'date-fns';
 import { formatVND } from '../../../shared/utils/currency';
-import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
+import { Colors, Spacing, FontNames } from '../../../shared/theme';
 
 interface BudgetCardProps {
   totalCap: number;
@@ -24,15 +24,20 @@ export default function BudgetCard({ totalCap, totalSpent, month }: BudgetCardPr
       colors={[Colors.budgetHeroStart, Colors.budgetHeroEnd]}
       style={styles.card}
     >
+      {/* Label */}
       <Text style={styles.label}>Còn lại</Text>
+
+      {/* Remaining amount */}
       <Text style={styles.remaining}>{formatVND(remaining)}</Text>
+
+      {/* Spent line */}
       <Text style={styles.spent}>
         Đã chi {formatVND(totalSpent)} / {formatVND(totalCap)}
       </Text>
 
       {/* Progress bar */}
       <View style={styles.barBg}>
-        <View style={[styles.barFill, { width: `${pct * 100}%` as any }]}>
+        <View style={[styles.barFill, { width: `${Math.min(pct * 100, 100)}%` as any }]}>
           <LinearGradient
             colors={[Colors.orangeMuted, Colors.orange]}
             start={{ x: 0, y: 0 }}
@@ -42,7 +47,7 @@ export default function BudgetCard({ totalCap, totalSpent, month }: BudgetCardPr
         </View>
       </View>
 
-      {/* Date markers */}
+      {/* Date markers row */}
       <View style={styles.dateRow}>
         <Text style={styles.dateLabel}>1/{monthNum}</Text>
         <Text style={styles.dateLabelToday}>Hôm nay</Text>

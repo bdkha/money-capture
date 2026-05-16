@@ -49,7 +49,7 @@ export default function CategoryBudgetRow({
         <Text style={styles.emoji}>{meta.emoji}</Text>
       </View>
 
-      {/* Info */}
+      {/* Info section */}
       <View style={styles.info}>
         <Text style={styles.categoryName}>{category}</Text>
         {/* Mini progress bar */}
@@ -63,13 +63,13 @@ export default function CategoryBudgetRow({
         </View>
       </View>
 
-      {/* Right side amounts */}
+      {/* Right side */}
       <View style={styles.right}>
         <Text style={styles.spentAmount}>{formatVND(spentCents)}</Text>
         <Text style={styles.capAmount}>/ {formatVND(capCents)}</Text>
         {overspent && (
           <Text style={styles.overspent}>
-            Vượt {formatVND(spentCents - capCents)} {'\u{1F62C}'}
+            Vượt {formatVND(spentCents - capCents)} 😬
           </Text>
         )}
       </View>

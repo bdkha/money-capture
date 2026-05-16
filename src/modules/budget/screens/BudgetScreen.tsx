@@ -7,7 +7,7 @@ import { useExpenses } from '../../expenses/hooks/useExpenses';
 import { useBudget } from '../hooks/useBudget';
 import BudgetCard from '../components/BudgetCard';
 import CategoryBudgetRow from '../components/CategoryBudgetRow';
-import { Colors, Spacing, FontNames, Radii } from '../../../shared/theme';
+import { Colors, Spacing, FontNames } from '../../../shared/theme';
 import { CATEGORIES, Category } from '../../../shared/types';
 
 const currentMonth = format(new Date(), 'yyyy-MM');
@@ -40,7 +40,10 @@ export default function BudgetScreen() {
   }, [expenses]);
 
   const totalSpent = useMemo(
-    () => expenses.filter((e) => e.date.startsWith(currentMonth)).reduce((s, e) => s + e.amount, 0),
+    () =>
+      expenses
+        .filter((e) => e.date.startsWith(currentMonth))
+        .reduce((s, e) => s + e.amount, 0),
     [expenses],
   );
 
@@ -61,7 +64,7 @@ export default function BudgetScreen() {
         <Text style={styles.subtitle}>{daysLeft} ngày còn lại</Text>
       </View>
 
-      {/* Hero card */}
+      {/* Hero budget card */}
       <BudgetCard
         totalCap={totalCap}
         totalSpent={totalSpent}
@@ -139,7 +142,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   lastRow: {
-    // Remove bottom border on last item
     overflow: 'hidden',
   },
 });
