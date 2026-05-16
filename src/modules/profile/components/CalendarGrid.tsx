@@ -1,31 +1,25 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { format, subDays, startOfWeek, addDays } from 'date-fns';
-import { Colors, Spacing, FontNames } from '../../../shared/theme';
+import { Spacing, FontNames } from '../../../shared/theme';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 interface CalendarGridProps {
   activeDates: Set<string>;
   expenseCountByDate: Record<string, number>;
 }
 
-const DAY_HEADERS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const WEEKS = 9;
 const TOTAL_DAYS = WEEKS * 7;
 
-function getCellBg(
-  dateStr: string,
-  todayStr: string,
-  count: number,
-  isFuture: boolean,
-): string {
-  if (isFuture) return Colors.ink1;
-  if (count === 0) return Colors.ink2;
-  if (count === 1) return 'rgba(255,107,53,0.25)';
-  if (count <= 3) return 'rgba(255,107,53,0.55)';
-  return Colors.orange;
-}
-
 export default function CalendarGrid({ activeDates, expenseCountByDate }: CalendarGridProps) {
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const DAY_HEADERS = [t.days.mon, t.days.tue, t.days.wed, t.days.thu, t.days.fri, t.days.sat, t.days.sun];
+
   const today = new Date();
   const todayStr = format(today, 'yyyy-MM-dd');
 
@@ -41,6 +35,18 @@ export default function CalendarGrid({ activeDates, expenseCountByDate }: Calend
       week.push(format(date, 'yyyy-MM-dd'));
     }
     weeks.push(week);
+  }
+
+  function getCellBg(
+    dateStr: string,
+    count: number,
+    isFuture: boolean,
+  ): string {
+    if (isFuture) return colors.ink1;
+    if (count === 0) return colors.ink2;
+    if (count === 1) return 'rgba(255,107,53,0.25)';
+    if (count <= 3) return 'rgba(255,107,53,0.55)';
+    return colors.orange;
   }
 
   return (
@@ -61,7 +67,7 @@ export default function CalendarGrid({ activeDates, expenseCountByDate }: Calend
             const isFuture = dateStr > todayStr;
             const isToday = dateStr === todayStr;
             const count = expenseCountByDate[dateStr] ?? 0;
-            const bg = getCellBg(dateStr, todayStr, count, isFuture);
+            const bg = getCellBg(dateStr, count, isFuture);
 
             return (
               <View
@@ -80,32 +86,34 @@ export default function CalendarGrid({ activeDates, expenseCountByDate }: Calend
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.lg,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  dayHeader: {
-    width: 34,
-    textAlign: 'center',
-    fontFamily: FontNames.body,
-    fontSize: 11,
-    color: Colors.inkTextSecondary,
-  },
-  weekRow: {
-    flexDirection: 'row',
-  },
-  cell: {
-    width: 30,
-    height: 30,
-    borderRadius: 6,
-    margin: 2,
-  },
-  todayCell: {
-    borderWidth: 2,
-    borderColor: Colors.orange,
-  },
-});
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    container: {
+      paddingHorizontal: Spacing.lg,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      marginBottom: 4,
+    },
+    dayHeader: {
+      width: 34,
+      textAlign: 'center',
+      fontFamily: FontNames.body,
+      fontSize: 11,
+      color: c.inkTextSecondary,
+    },
+    weekRow: {
+      flexDirection: 'row',
+    },
+    cell: {
+      width: 30,
+      height: 30,
+      borderRadius: 6,
+      margin: 2,
+    },
+    todayCell: {
+      borderWidth: 2,
+      borderColor: c.orange,
+    },
+  });
+}

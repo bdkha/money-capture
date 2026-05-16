@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, FontNames } from '../../../shared/theme';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 interface StreakCardProps {
   currentStreak: number;
@@ -11,6 +12,8 @@ interface StreakCardProps {
 const DOTS_COUNT = 30;
 
 export default function StreakCard({ currentStreak, longestStreak }: StreakCardProps) {
+  const { t } = useI18n();
+
   return (
     <LinearGradient
       colors={[Colors.streakStart, Colors.streakEnd]}
@@ -20,16 +23,16 @@ export default function StreakCard({ currentStreak, longestStreak }: StreakCardP
       <Text style={styles.bgFlame}>🔥</Text>
 
       {/* Header label */}
-      <Text style={styles.headerLabel}>Streak chộp</Text>
+      <Text style={styles.headerLabel}>{t.streak.label}</Text>
 
       {/* Streak number row */}
       <View style={styles.numberRow}>
         <Text style={styles.streakNumber}>{currentStreak}</Text>
-        <Text style={styles.streakUnit}> ngày</Text>
+        <Text style={styles.streakUnit}> {t.streak.days}</Text>
       </View>
 
       {/* Longest record */}
-      <Text style={styles.record}>Kỷ lục: {longestStreak} ngày</Text>
+      <Text style={styles.record}>{t.streak.longest + ': ' + longestStreak + ' ' + t.streak.days}</Text>
 
       {/* Progress dots */}
       <View style={styles.dotsContainer}>

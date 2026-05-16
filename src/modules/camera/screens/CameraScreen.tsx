@@ -328,12 +328,12 @@ export default function CameraScreen() {
         <View style={styles.topRow}>
           {/* Streak pill */}
           <View style={styles.glassPill}>
-            <Text style={styles.pillText}>🔥 {STREAK_DAYS} ngày</Text>
+            <Text style={styles.pillText}>🔥 {STREAK_DAYS} {t.feed.streakDays}</Text>
           </View>
 
           {/* Today's spend pill */}
           <View style={styles.glassPill}>
-            <Text style={styles.pillText}>Hôm nay: {formatVND(todaySpend)}</Text>
+            <Text style={styles.pillText}>{t.feed.today}: {formatVND(todaySpend)}</Text>
           </View>
 
           {/* Flash toggle */}

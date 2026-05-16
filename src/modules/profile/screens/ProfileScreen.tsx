@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,10 @@ import { useExpenses } from '../../expenses/hooks/useExpenses';
 import { useStreak } from '../hooks/useStreak';
 import StreakCard from '../components/StreakCard';
 import CalendarGrid from '../components/CalendarGrid';
-import { Colors, Spacing, FontNames, Radii } from '../../../shared/theme';
+import { Spacing, FontNames, Radii } from '../../../shared/theme';
+import { useColors, useTheme, ColorTokens, ThemeMode } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
+import { Language } from '../../../shared/i18n/translations';
 
 // Stub friends data
 const STUB_FRIENDS = [
@@ -24,6 +27,10 @@ function avatarColor(name: string): string {
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const { mode, setMode } = useTheme();
+  const { t, language, setLanguage } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { expenses, refresh } = useExpenses();
   const streak = useStreak(expenses);
 
@@ -52,7 +59,7 @@ export default function ProfileScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Hồ sơ của tôi</Text>
+        <Text style={styles.title}>{t.profile.title}</Text>
       </View>
 
       {/* Streak card */}
@@ -63,7 +70,7 @@ export default function ProfileScreen() {
 
       {/* Calendar section */}
       <Text style={[styles.sectionLabel, { marginTop: Spacing.xl }]}>
-        Lịch chộp
+        {t.profile.calendar}
       </Text>
       <CalendarGrid
         activeDates={streak.activeDates}
@@ -72,7 +79,7 @@ export default function ProfileScreen() {
 
       {/* Friends section */}
       <Text style={[styles.sectionLabel, { marginTop: Spacing.xl }]}>
-        Bạn bè
+        {t.profile.friends}
       </Text>
 
       <View style={styles.friendsCard}>
@@ -92,12 +99,12 @@ export default function ProfileScreen() {
             {/* Info */}
             <View style={styles.friendInfo}>
               <Text style={styles.friendName}>{friend.name}</Text>
-              <Text style={styles.friendSub}>Bạn bè</Text>
+              <Text style={styles.friendSub}>{t.profile.friendSub}</Text>
             </View>
 
             {/* Flame pill */}
             <View style={styles.flamePill}>
-              <Text style={styles.flamePillText}>🔥 {friend.streak} ngày</Text>
+              <Text style={styles.flamePillText}>🔥 {friend.streak + ' ' + t.profile.streakDays}</Text>
             </View>
           </View>
         ))}
@@ -105,119 +112,232 @@ export default function ProfileScreen() {
         {/* Invite row */}
         <View style={styles.inviteRow}>
           <View style={styles.addCircle}>
-            <Ionicons name="add" size={20} color={Colors.inkTextSecondary} />
+            <Ionicons name="add" size={20} color={colors.inkTextSecondary} />
           </View>
-          <Text style={styles.inviteText}>Mời bạn bè</Text>
+          <Text style={styles.inviteText}>{t.profile.invite}</Text>
+        </View>
+      </View>
+
+      {/* Settings section */}
+      <Text style={[styles.sectionLabel, { marginTop: Spacing.xl }]}>
+        {t.profile.settings}
+      </Text>
+      <View style={styles.settingsCard}>
+        {/* Theme row */}
+        <View style={styles.settingsRow}>
+          <View style={styles.settingsRowLeft}>
+            <Ionicons name="contrast-outline" size={20} color={colors.inkTextSecondary} />
+            <Text style={styles.settingsLabel}>{t.profile.theme}</Text>
+          </View>
+          <View style={styles.segmented}>
+            {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => (
+              <TouchableOpacity
+                key={m}
+                style={[styles.segment, mode === m && styles.segmentActive]}
+                onPress={() => setMode(m)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.segmentText, mode === m && styles.segmentTextActive]}>
+                  {m === 'light' ? t.profile.themeLight : m === 'dark' ? t.profile.themeDark : t.profile.themeSystem}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Language row */}
+        <View style={styles.settingsRow}>
+          <View style={styles.settingsRowLeft}>
+            <Ionicons name="globe-outline" size={20} color={colors.inkTextSecondary} />
+            <Text style={styles.settingsLabel}>{t.profile.language}</Text>
+          </View>
+          <View style={styles.segmented}>
+            {(['vi', 'en'] as Language[]).map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[styles.segment, language === lang && styles.segmentActive]}
+                onPress={() => setLanguage(lang)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.segmentText, language === lang && styles.segmentTextActive]}>
+                  {lang === 'vi' ? '🇻🇳 VI' : '🇬🇧 EN'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.ink0,
-  },
-  content: {
-    gap: 0,
-  },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  title: {
-    fontFamily: FontNames.title,
-    fontSize: 22,
-    color: Colors.inkTextPrimary,
-  },
-  sectionLabel: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 11,
-    color: Colors.inkTextSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  friendsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginHorizontal: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.ink2,
-    overflow: 'hidden',
-  },
-  friendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ink2,
-  },
-  friendRowLast: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ink2,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitial: {
-    fontFamily: FontNames.title,
-    fontSize: 18,
-    color: '#FFFFFF',
-  },
-  friendInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  friendName: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 15,
-    color: Colors.inkTextPrimary,
-  },
-  friendSub: {
-    fontFamily: FontNames.body,
-    fontSize: 12,
-    color: Colors.inkTextSecondary,
-  },
-  flamePill: {
-    backgroundColor: Colors.ink1,
-    borderRadius: Radii.full,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  flamePillText: {
-    fontFamily: FontNames.body,
-    fontSize: 12,
-    color: Colors.inkTextSecondary,
-  },
-  inviteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: 8,
-  },
-  addCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.ink1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: Colors.ink3,
-    borderStyle: 'dashed',
-  },
-  inviteText: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 15,
-    color: Colors.orange,
-  },
-});
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: c.ink0,
+    },
+    content: {
+      gap: 0,
+    },
+    header: {
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.lg,
+    },
+    title: {
+      fontFamily: FontNames.title,
+      fontSize: 22,
+      color: c.inkTextPrimary,
+    },
+    sectionLabel: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 11,
+      color: c.inkTextSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.sm,
+    },
+    friendsCard: {
+      backgroundColor: c.cardBg,
+      borderRadius: 16,
+      marginHorizontal: Spacing.lg,
+      borderWidth: 1,
+      borderColor: c.ink2,
+      overflow: 'hidden',
+    },
+    friendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: c.ink2,
+    },
+    friendRowLast: {
+      borderBottomWidth: 1,
+      borderBottomColor: c.ink2,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarInitial: {
+      fontFamily: FontNames.title,
+      fontSize: 18,
+      color: '#FFFFFF',
+    },
+    friendInfo: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    friendName: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 15,
+      color: c.inkTextPrimary,
+    },
+    friendSub: {
+      fontFamily: FontNames.body,
+      fontSize: 12,
+      color: c.inkTextSecondary,
+    },
+    flamePill: {
+      backgroundColor: c.ink1,
+      borderRadius: Radii.full,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    flamePillText: {
+      fontFamily: FontNames.body,
+      fontSize: 12,
+      color: c.inkTextSecondary,
+    },
+    inviteRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      gap: 8,
+    },
+    addCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: c.ink1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: c.ink3,
+      borderStyle: 'dashed',
+    },
+    inviteText: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 15,
+      color: c.orange,
+    },
+    settingsCard: {
+      backgroundColor: c.cardBg,
+      borderRadius: 16,
+      marginHorizontal: Spacing.lg,
+      borderWidth: 1,
+      borderColor: c.ink2,
+      overflow: 'hidden',
+    },
+    settingsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: 14,
+    },
+    settingsRowLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    settingsLabel: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 15,
+      color: c.inkTextPrimary,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: c.ink2,
+      marginHorizontal: Spacing.lg,
+    },
+    segmented: {
+      flexDirection: 'row',
+      backgroundColor: c.ink1,
+      borderRadius: Radii.md,
+      padding: 2,
+      gap: 2,
+    },
+    segment: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: Radii.sm,
+    },
+    segmentActive: {
+      backgroundColor: c.cardBg,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    segmentText: {
+      fontFamily: FontNames.bodyMed,
+      fontSize: 12,
+      color: c.inkTextSecondary,
+    },
+    segmentTextActive: {
+      color: c.inkTextPrimary,
+    },
+  });
+}
