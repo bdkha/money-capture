@@ -54,7 +54,7 @@ export default function CalendarGrid({ activeDates, expenseCountByDate }: Calend
         ))}
       </View>
 
-      {/* Grid rows */}
+      {/* Grid rows — one per week */}
       {weeks.map((week, wi) => (
         <View key={wi} style={styles.weekRow}>
           {week.map((dateStr) => {
@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
   },
   weekRow: {
     flexDirection: 'row',
-    marginBottom: 0,
   },
   cell: {
     width: 30,

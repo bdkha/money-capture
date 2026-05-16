@@ -27,7 +27,7 @@ export default function CategoryBudgetRow({
       Alert.prompt(
         'Sửa ngân sách',
         `Nhập hạn mức cho ${category} (VND):`,
-        (text) => {
+        (text: string) => {
           const n = parseInt(text, 10);
           if (!isNaN(n) && n > 0) onUpdateCap(n);
         },

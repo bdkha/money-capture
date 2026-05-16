@@ -42,8 +42,8 @@ export default function BudgetScreen() {
   const totalSpent = useMemo(
     () =>
       expenses
-        .filter((e) => e.date.startsWith(currentMonth))
-        .reduce((s, e) => s + e.amount, 0),
+        .filter((e: { date: string }) => e.date.startsWith(currentMonth))
+        .reduce((s: number, e: { amount: number }) => s + e.amount, 0),
     [expenses],
   );
 
@@ -79,7 +79,7 @@ export default function BudgetScreen() {
       {/* Category rows card */}
       <View style={styles.categoryCard}>
         {CATEGORIES.map((cat, index) => {
-          const catBudget = budget?.categories.find((c) => c.category === cat);
+          const catBudget = budget?.categories.find((c: { category: Category }) => c.category === cat);
           const capCents = catBudget?.capCents ?? 500_000;
           const spentCents = spentByCategory[cat] ?? 0;
           return (

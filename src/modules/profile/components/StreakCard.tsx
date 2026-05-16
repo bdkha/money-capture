@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
+import { Colors, Spacing, FontNames } from '../../../shared/theme';
 
 interface StreakCardProps {
   currentStreak: number;

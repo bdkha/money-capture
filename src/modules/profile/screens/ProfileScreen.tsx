@@ -52,7 +52,7 @@ export default function ProfileScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Ho so cua toi</Text>
+        <Text style={styles.title}>Hồ sơ của tôi</Text>
       </View>
 
       {/* Streak card */}
@@ -63,7 +63,7 @@ export default function ProfileScreen() {
 
       {/* Calendar section */}
       <Text style={[styles.sectionLabel, { marginTop: Spacing.xl }]}>
-        Lich chop
+        Lịch chộp
       </Text>
       <CalendarGrid
         activeDates={streak.activeDates}
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
 
       {/* Friends section */}
       <Text style={[styles.sectionLabel, { marginTop: Spacing.xl }]}>
-        Ban be
+        Bạn bè
       </Text>
 
       <View style={styles.friendsCard}>
@@ -92,12 +92,12 @@ export default function ProfileScreen() {
             {/* Info */}
             <View style={styles.friendInfo}>
               <Text style={styles.friendName}>{friend.name}</Text>
-              <Text style={styles.friendSub}>Ban be</Text>
+              <Text style={styles.friendSub}>Bạn bè</Text>
             </View>
 
             {/* Flame pill */}
             <View style={styles.flamePill}>
-              <Text style={styles.flamePillText}>🔥 {friend.streak} ngay</Text>
+              <Text style={styles.flamePillText}>🔥 {friend.streak} ngày</Text>
             </View>
           </View>
         ))}
@@ -107,7 +107,7 @@ export default function ProfileScreen() {
           <View style={styles.addCircle}>
             <Ionicons name="add" size={20} color={Colors.inkTextSecondary} />
           </View>
-          <Text style={styles.inviteText}>Moi ban be</Text>
+          <Text style={styles.inviteText}>Mời bạn bè</Text>
         </View>
       </View>
     </ScrollView>
