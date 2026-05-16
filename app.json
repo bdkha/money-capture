@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "money-capture",
+    "name": "Chộp",
     "slug": "money-capture",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FBF6EE"
     },
     "ios": {
       "supportsTablet": true
@@ -30,13 +30,13 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow money-capture to access camera to photograph receipts."
+          "cameraPermission": "Cho phép Chộp truy cập camera để chụp ảnh hoá đơn."
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow money-capture to save receipt photos."
+          "photosPermission": "Cho phép Chộp lưu ảnh hoá đơn."
         }
       ]
     ]

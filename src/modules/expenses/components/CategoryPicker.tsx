@@ -1,7 +1,7 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { Category, CATEGORIES } from '../../../shared/types';
-import { Spacing } from '../../../shared/theme';
+import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
 import CategoryPill from './CategoryPill';
 
 interface CategoryPickerProps {
@@ -10,6 +10,10 @@ interface CategoryPickerProps {
 }
 
 export default function CategoryPicker({ selected, onChange }: CategoryPickerProps) {
+  const handleAddPress = () => {
+    Alert.alert('Sắp ra mắt', 'Danh mục tuỳ chỉnh sẽ sớm có.');
+  };
+
   return (
     <ScrollView
       horizontal
@@ -25,6 +29,15 @@ export default function CategoryPicker({ selected, onChange }: CategoryPickerPro
           onPress={() => onChange(cat)}
         />
       ))}
+
+      {/* Stub "+" pill */}
+      <TouchableOpacity
+        onPress={handleAddPress}
+        activeOpacity={0.7}
+        style={styles.stubPill}
+      >
+        <Text style={styles.stubText}>+ Thêm</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -36,5 +49,23 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  stubPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: Radii.full,
+    borderWidth: 1.5,
+    borderColor: Colors.inkTextSecondary,
+    borderStyle: 'dashed',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    backgroundColor: 'transparent',
+  },
+  stubText: {
+    fontFamily: FontNames.bodySemi,
+    fontSize: 13,
+    color: Colors.inkTextSecondary,
   },
 });

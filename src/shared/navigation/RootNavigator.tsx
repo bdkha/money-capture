@@ -1,23 +1,32 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../theme';
+import GlassBottomNav from './GlassBottomNav';
+
+// Screen imports — implemented by parallel agents
 import CameraScreen from '../../modules/camera/screens/CameraScreen';
-import HistoryScreen from '../../modules/expenses/screens/HistoryScreen';
-import SummaryScreen from '../../modules/summary/screens/SummaryScreen';
+import FeedScreen from '../../modules/expenses/screens/FeedScreen';
+import StatsScreen from '../../modules/summary/screens/StatsScreen';
+import BudgetScreen from '../../modules/budget/screens/BudgetScreen';
+import ProfileScreen from '../../modules/profile/screens/ProfileScreen';
 import PreviewScreen from '../../modules/expenses/screens/PreviewScreen';
+
+// ─── Param Lists ──────────────────────────────────────────────────────────────
+
+export type TabParamList = {
+  Feed: undefined;
+  Stats: undefined;
+  Camera: undefined;
+  Budget: undefined;
+  Profile: undefined;
+};
 
 export type RootStackParamList = {
   Tabs: undefined;
   Preview: { tempUri: string };
 };
 
-export type TabParamList = {
-  Camera: undefined;
-  History: undefined;
-  Summary: undefined;
-};
+// ─── Navigators ──────────────────────────────────────────────────────────────
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -25,42 +34,45 @@ const Tab = createBottomTabNavigator<TabParamList>();
 function TabNavigator() {
   return (
     <Tab.Navigator
+      tabBar={(props) => <GlassBottomNav {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
         },
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: Colors.textSecondary,
       }}
     >
+      <Tab.Screen
+        name="Feed"
+        component={FeedScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Stats"
+        component={StatsScreen}
+        options={{ headerShown: false }}
+      />
       <Tab.Screen
         name="Camera"
         component={CameraScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="camera" size={size} color={color} />
-          ),
+          headerShown: false,
+          // Hide the glass nav while the camera is open
+          tabBarStyle: { display: 'none' },
         }}
       />
       <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt-outline" size={size} color={color} />
-          ),
-        }}
+        name="Budget"
+        component={BudgetScreen}
+        options={{ headerShown: false }}
       />
       <Tab.Screen
-        name="Summary"
-        component={SummaryScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bar-chart-outline" size={size} color={color} />
-          ),
-        }}
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
       />
     </Tab.Navigator>
   );

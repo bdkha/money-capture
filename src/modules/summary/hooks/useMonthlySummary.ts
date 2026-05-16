@@ -11,7 +11,7 @@ export function useMonthlySummary(expenses: Expense[], month: string): MonthlySu
 
     for (const exp of expenses) {
       if (exp.date.startsWith(month)) {
-        byCategory[exp.category] += exp.amount;
+        byCategory[exp.category] = (byCategory[exp.category] ?? 0) + exp.amount;
         totalCents += exp.amount;
       }
     }

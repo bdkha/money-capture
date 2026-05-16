@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Expense } from '../../../shared/types';
-import { loadExpenses, deleteExpense } from '../storage/expenseStorage';
+import { loadExpenses, deleteExpense, migrateExpensesIfNeeded } from '../storage/expenseStorage';
 import { deletePhoto } from '../../camera/storage/photoStorage';
 
 export function useExpenses() {
@@ -9,6 +9,7 @@ export function useExpenses() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    await migrateExpensesIfNeeded();
     const data = await loadExpenses();
     setExpenses(data.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     setLoading(false);

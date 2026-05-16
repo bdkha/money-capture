@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { Colors, Typography } from '../../../shared/theme';
+import { Colors, FontNames } from '../../../shared/theme';
 
 interface AmountInputProps {
   value: string;
@@ -8,23 +8,24 @@ interface AmountInputProps {
 }
 
 export default function AmountInput({ value, onChange }: AmountInputProps) {
+  const handleChange = (text: string) => {
+    const clean = text.replace(/[^0-9]/g, '');
+    onChange(clean);
+  };
+
   return (
     <View style={styles.row}>
-      <Text style={styles.currency}>$</Text>
       <TextInput
         style={styles.input}
         value={value}
-        onChangeText={(text) => {
-          // allow digits and single decimal point only
-          const clean = text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
-          onChange(clean);
-        }}
-        keyboardType="decimal-pad"
-        placeholder="0.00"
-        placeholderTextColor={Colors.textSecondary}
+        onChangeText={handleChange}
+        keyboardType="numeric"
+        placeholder="0"
+        placeholderTextColor={Colors.inkTextSecondary}
         autoFocus
-        selectionColor={Colors.accent}
+        selectionColor={Colors.orange}
       />
+      <Text style={styles.suffix}>đ</Text>
     </View>
   );
 }
@@ -36,18 +37,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
   },
-  currency: {
-    color: Colors.textSecondary,
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 6,
-    marginRight: 4,
-  },
   input: {
-    color: Colors.text,
-    fontSize: Typography.amount.fontSize,
-    fontWeight: Typography.amount.fontWeight,
-    minWidth: 120,
+    fontFamily: FontNames.amount,
+    fontSize: 56,
+    color: Colors.inkTextPrimary,
+    minWidth: 80,
     textAlign: 'center',
+  },
+  suffix: {
+    fontFamily: FontNames.subtitle,
+    fontSize: 28,
+    color: Colors.inkTextSecondary,
+    marginLeft: 4,
+    alignSelf: 'flex-end',
+    marginBottom: 6,
   },
 });
