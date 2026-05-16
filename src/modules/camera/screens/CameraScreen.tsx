@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -22,206 +22,22 @@ import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
 import { RootStackParamList } from '../../../shared/navigation/RootNavigator';
 import { useExpenses } from '../../expenses/hooks/useExpenses';
 import { formatVND } from '../../../shared/utils/currency';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-type CaptureMode = 'Hoá đơn' | 'Chộp nhanh' | 'Thủ công';
-
-const MODES: CaptureMode[] = ['Hoá đơn', 'Chộp nhanh', 'Thủ công'];
+type CaptureMode = string;
 
 const LAST_CAPTURE_KEY = '@chopp:last_capture';
 
 // Streak is hard-coded for now until a streak module is wired up
 const STREAK_DAYS = 3;
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
-export default function CameraScreen() {
-  const [facing, setFacing] = useState<CameraType>('back');
-  const [capturing, setCapturing] = useState(false);
-  const [flashOn, setFlashOn] = useState(false);
-  const [lastUri, setLastUri] = useState<string | null>(null);
-  const [mode, setMode] = useState<CaptureMode>('Hoá đơn');
-
-  const cameraRef = useRef<CameraView>(null);
-  const navigation = useNavigation<Nav>();
-  const [permission, requestPermission] = useCameraPermissions();
-
-  const { expenses } = useExpenses();
-
-  // ── Load persisted last-capture thumbnail on mount ─────────────────────────
-  useEffect(() => {
-    AsyncStorage.getItem(LAST_CAPTURE_KEY)
-      .then((uri) => {
-        if (uri) setLastUri(uri);
-      })
-      .catch(() => {
-        // ignore storage errors
-      });
-  }, []);
-
-  // ── Derived: today's total spend ───────────────────────────────────────────
-  const todayKey = format(new Date(), 'yyyy-MM-dd');
-  const todaySpend = expenses
-    .filter((e) => e.date === todayKey)
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  // ── Capture handler ────────────────────────────────────────────────────────
-  const handleCapture = useCallback(async () => {
-    if (capturing || !cameraRef.current) return;
-    setCapturing(true);
-
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
-      if (photo?.uri) {
-        // Persist thumbnail for next session
-        await AsyncStorage.setItem(LAST_CAPTURE_KEY, photo.uri);
-        setLastUri(photo.uri);
-        navigation.navigate('Preview', { tempUri: photo.uri });
-      }
-    } finally {
-      setCapturing(false);
-    }
-  }, [capturing, navigation]);
-
-  const toggleFacing = useCallback(() => {
-    setFacing((f) => (f === 'back' ? 'front' : 'back'));
-  }, []);
-
-  // ── Permission loading ─────────────────────────────────────────────────────
-  if (!permission) {
-    return <View style={styles.loadingContainer} />;
-  }
-
-  // ── Permission denied ──────────────────────────────────────────────────────
-  if (!permission.granted) {
-    return (
-      <View style={styles.permissionContainer}>
-        <Ionicons name="camera-outline" size={64} color={Colors.inkTextSecondary} />
-        <Text style={styles.permissionTitle}>Cần quyền camera</Text>
-        <Text style={styles.permissionBody}>
-          Chộp cần truy cập máy ảnh để chụp hoá đơn và chi tiêu của bạn.
-        </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Cho phép</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  // ── Main camera UI ─────────────────────────────────────────────────────────
-  const flashMode: FlashMode = flashOn ? 'on' : 'off';
-
-  return (
-    <View style={styles.container}>
-      {/* Camera feed */}
-      <CameraView
-        ref={cameraRef}
-        style={StyleSheet.absoluteFill}
-        facing={facing}
-        flash={flashMode}
-      />
-
-      {/* Vignette — top */}
-      <LinearGradient
-        colors={['rgba(0,0,0,0.6)', 'transparent']}
-        style={styles.vignetteTop}
-        pointerEvents="none"
-      />
-
-      {/* Vignette — bottom */}
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.75)']}
-        style={styles.vignetteBottom}
-        pointerEvents="none"
-      />
-
-      {/* ── Top overlay ──────────────────────────────────────────────────── */}
-      <SafeAreaView style={styles.topOverlay}>
-        <View style={styles.topRow}>
-          {/* Streak pill */}
-          <View style={styles.glassPill}>
-            <Text style={styles.pillText}>🔥 {STREAK_DAYS} ngày</Text>
-          </View>
-
-          {/* Today's spend pill */}
-          <View style={styles.glassPill}>
-            <Text style={styles.pillText}>Hôm nay: {formatVND(todaySpend)}</Text>
-          </View>
-
-          {/* Flash toggle */}
-          <TouchableOpacity
-            onPress={() => setFlashOn((f) => !f)}
-            style={styles.flashButton}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons
-              name={flashOn ? 'flash' : 'flash-off'}
-              size={22}
-              color="#FFF"
-            />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-
-      {/* ── Bottom overlay ───────────────────────────────────────────────── */}
-      <SafeAreaView style={styles.bottomOverlay}>
-        {/* Mode selector tabs */}
-        <View style={styles.modeTabRow}>
-          {MODES.map((m) => (
-            <TouchableOpacity
-              key={m}
-              onPress={() => setMode(m)}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            >
-              <Text
-                style={[
-                  styles.modeTabText,
-                  mode === m && styles.modeTabActive,
-                ]}
-              >
-                {m}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Shutter row */}
-        <View style={styles.shutterRow}>
-          {/* Last capture thumbnail */}
-          <TouchableOpacity
-            style={styles.thumbnailSlot}
-            activeOpacity={0.75}
-          >
-            {lastUri ? (
-              <Image source={{ uri: lastUri }} style={styles.thumbnail} />
-            ) : (
-              <View style={styles.thumbnailEmpty} />
-            )}
-          </TouchableOpacity>
-
-          <ShutterButton onPress={handleCapture} disabled={capturing} />
-
-          {/* Camera flip */}
-          <TouchableOpacity
-            onPress={toggleFacing}
-            style={styles.flipButton}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="camera-reverse-outline" size={28} color="#FFF" />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </View>
-  );
-}
-
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
+// Camera screen is always dark — use static Colors for camera-specific colors
 const styles = StyleSheet.create({
   // ── Containers ──────────────────────────────────────────────────────────────
   container: {
@@ -398,3 +214,191 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.2)',
   },
 });
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function CameraScreen() {
+  const { t } = useI18n();
+
+  const MODES: CaptureMode[] = [t.camera.modeReceipt, t.camera.modeQuick, t.camera.modeManual];
+
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [capturing, setCapturing] = useState(false);
+  const [flashOn, setFlashOn] = useState(false);
+  const [lastUri, setLastUri] = useState<string | null>(null);
+  const [mode, setMode] = useState<CaptureMode>(t.camera.modeReceipt);
+
+  const cameraRef = useRef<CameraView>(null);
+  const navigation = useNavigation<Nav>();
+  const [permission, requestPermission] = useCameraPermissions();
+
+  const { expenses } = useExpenses();
+
+  // ── Load persisted last-capture thumbnail on mount ─────────────────────────
+  useEffect(() => {
+    AsyncStorage.getItem(LAST_CAPTURE_KEY)
+      .then((uri) => {
+        if (uri) setLastUri(uri);
+      })
+      .catch(() => {
+        // ignore storage errors
+      });
+  }, []);
+
+  // ── Derived: today's total spend ───────────────────────────────────────────
+  const todayKey = format(new Date(), 'yyyy-MM-dd');
+  const todaySpend = expenses
+    .filter((e) => e.date === todayKey)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  // ── Capture handler ────────────────────────────────────────────────────────
+  const handleCapture = useCallback(async () => {
+    if (capturing || !cameraRef.current) return;
+    setCapturing(true);
+
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (photo?.uri) {
+        // Persist thumbnail for next session
+        await AsyncStorage.setItem(LAST_CAPTURE_KEY, photo.uri);
+        setLastUri(photo.uri);
+        navigation.navigate('Preview', { tempUri: photo.uri });
+      }
+    } finally {
+      setCapturing(false);
+    }
+  }, [capturing, navigation]);
+
+  const toggleFacing = useCallback(() => {
+    setFacing((f) => (f === 'back' ? 'front' : 'back'));
+  }, []);
+
+  // ── Permission loading ─────────────────────────────────────────────────────
+  if (!permission) {
+    return <View style={styles.loadingContainer} />;
+  }
+
+  // ── Permission denied ──────────────────────────────────────────────────────
+  if (!permission.granted) {
+    return (
+      <View style={styles.permissionContainer}>
+        <Ionicons name="camera-outline" size={64} color={Colors.inkTextSecondary} />
+        <Text style={styles.permissionTitle}>Cần quyền camera</Text>
+        <Text style={styles.permissionBody}>
+          Chộp cần truy cập máy ảnh để chụp hoá đơn và chi tiêu của bạn.
+        </Text>
+        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+          <Text style={styles.permissionButtonText}>Cho phép</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // ── Main camera UI ─────────────────────────────────────────────────────────
+  const flashMode: FlashMode = flashOn ? 'on' : 'off';
+
+  return (
+    <View style={styles.container}>
+      {/* Camera feed */}
+      <CameraView
+        ref={cameraRef}
+        style={StyleSheet.absoluteFill}
+        facing={facing}
+        flash={flashMode}
+      />
+
+      {/* Vignette — top */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.6)', 'transparent']}
+        style={styles.vignetteTop}
+        pointerEvents="none"
+      />
+
+      {/* Vignette — bottom */}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.75)']}
+        style={styles.vignetteBottom}
+        pointerEvents="none"
+      />
+
+      {/* ── Top overlay ──────────────────────────────────────────────────── */}
+      <SafeAreaView style={styles.topOverlay}>
+        <View style={styles.topRow}>
+          {/* Streak pill */}
+          <View style={styles.glassPill}>
+            <Text style={styles.pillText}>🔥 {STREAK_DAYS} ngày</Text>
+          </View>
+
+          {/* Today's spend pill */}
+          <View style={styles.glassPill}>
+            <Text style={styles.pillText}>Hôm nay: {formatVND(todaySpend)}</Text>
+          </View>
+
+          {/* Flash toggle */}
+          <TouchableOpacity
+            onPress={() => setFlashOn((f) => !f)}
+            style={styles.flashButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name={flashOn ? 'flash' : 'flash-off'}
+              size={22}
+              color="#FFF"
+            />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
+      {/* ── Bottom overlay ───────────────────────────────────────────────── */}
+      <SafeAreaView style={styles.bottomOverlay}>
+        {/* Mode selector tabs */}
+        <View style={styles.modeTabRow}>
+          {MODES.map((m) => (
+            <TouchableOpacity
+              key={m}
+              onPress={() => setMode(m)}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Text
+                style={[
+                  styles.modeTabText,
+                  mode === m && styles.modeTabActive,
+                ]}
+              >
+                {m}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Shutter row */}
+        <View style={styles.shutterRow}>
+          {/* Last capture thumbnail */}
+          <TouchableOpacity
+            style={styles.thumbnailSlot}
+            activeOpacity={0.75}
+          >
+            {lastUri ? (
+              <Image source={{ uri: lastUri }} style={styles.thumbnail} />
+            ) : (
+              <View style={styles.thumbnailEmpty} />
+            )}
+          </TouchableOpacity>
+
+          <ShutterButton onPress={handleCapture} disabled={capturing} />
+
+          {/* Camera flip */}
+          <TouchableOpacity
+            onPress={toggleFacing}
+            style={styles.flipButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="camera-reverse-outline" size={28} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+}

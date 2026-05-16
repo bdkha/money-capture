@@ -7,14 +7,19 @@ import { useExpenses } from '../../expenses/hooks/useExpenses';
 import { useBudget } from '../hooks/useBudget';
 import BudgetCard from '../components/BudgetCard';
 import CategoryBudgetRow from '../components/CategoryBudgetRow';
-import { Colors, Spacing, FontNames } from '../../../shared/theme';
+import { Spacing, FontNames } from '../../../shared/theme';
 import { CATEGORIES, Category } from '../../../shared/types';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 const currentMonth = format(new Date(), 'yyyy-MM');
 const monthNum = format(new Date(), 'M');
 
 export default function BudgetScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { expenses, refresh } = useExpenses();
   const { budget, updateCap } = useBudget(currentMonth);
 
@@ -60,8 +65,8 @@ export default function BudgetScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Ngân quỹ T{monthNum}</Text>
-        <Text style={styles.subtitle}>{daysLeft} ngày còn lại</Text>
+        <Text style={styles.title}>{t.budget.titlePrefix + monthNum}</Text>
+        <Text style={styles.subtitle}>{daysLeft + ' ' + t.budget.daysLeft}</Text>
       </View>
 
       {/* Hero budget card */}
@@ -73,7 +78,7 @@ export default function BudgetScreen() {
 
       {/* Section label */}
       <Text style={[styles.sectionLabel, { marginTop: Spacing.xl }]}>
-        Chi tiết danh mục
+        {t.budget.details}
       </Text>
 
       {/* Category rows card */}
@@ -101,47 +106,49 @@ export default function BudgetScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.ink0,
-  },
-  content: {
-    gap: 0,
-  },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  title: {
-    fontFamily: FontNames.title,
-    fontSize: 22,
-    color: Colors.inkTextPrimary,
-  },
-  subtitle: {
-    fontFamily: FontNames.body,
-    fontSize: 13,
-    color: Colors.inkTextSecondary,
-    marginTop: 2,
-  },
-  sectionLabel: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 11,
-    color: Colors.inkTextSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  categoryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginHorizontal: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.ink2,
-    overflow: 'hidden',
-  },
-  lastRow: {
-    overflow: 'hidden',
-  },
-});
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: c.ink0,
+    },
+    content: {
+      gap: 0,
+    },
+    header: {
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.lg,
+    },
+    title: {
+      fontFamily: FontNames.title,
+      fontSize: 22,
+      color: c.inkTextPrimary,
+    },
+    subtitle: {
+      fontFamily: FontNames.body,
+      fontSize: 13,
+      color: c.inkTextSecondary,
+      marginTop: 2,
+    },
+    sectionLabel: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 11,
+      color: c.inkTextSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.sm,
+    },
+    categoryCard: {
+      backgroundColor: c.cardBg,
+      borderRadius: 16,
+      marginHorizontal: Spacing.lg,
+      borderWidth: 1,
+      borderColor: c.ink2,
+      overflow: 'hidden',
+    },
+    lastRow: {
+      overflow: 'hidden',
+    },
+  });
+}

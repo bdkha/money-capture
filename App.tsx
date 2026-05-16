@@ -1,6 +1,6 @@
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import {
   useFonts,
@@ -20,19 +20,43 @@ import {
   JetBrainsMono_700Bold,
 } from '@expo-google-fonts/jetbrains-mono';
 import RootNavigator from './src/shared/navigation/RootNavigator';
-import { Colors } from './src/shared/theme';
+import { ThemeProvider, useTheme, LightColors, DarkColors } from './src/shared/theme/ThemeContext';
+import { I18nProvider } from './src/shared/i18n/I18nContext';
 
-const choptTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: Colors.ink0,
-    card: Colors.ink1,
-    border: Colors.ink2,
-    primary: Colors.orange,
-    text: Colors.inkTextPrimary,
-  },
-};
+function ThemedApp() {
+  const { isDark, colors } = useTheme();
+
+  const navTheme = isDark
+    ? {
+        ...DarkTheme,
+        colors: {
+          ...DarkTheme.colors,
+          background: colors.ink0,
+          card: colors.ink1,
+          border: colors.ink2,
+          primary: colors.orange,
+          text: colors.inkTextPrimary,
+        },
+      }
+    : {
+        ...DefaultTheme,
+        colors: {
+          ...DefaultTheme.colors,
+          background: colors.ink0,
+          card: colors.ink1,
+          border: colors.ink2,
+          primary: colors.orange,
+          text: colors.inkTextPrimary,
+        },
+      };
+
+  return (
+    <NavigationContainer theme={navTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <RootNavigator />
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -52,10 +76,11 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer theme={choptTheme}>
-        <StatusBar style="dark" />
-        <RootNavigator />
-      </NavigationContainer>
+      <ThemeProvider>
+        <I18nProvider>
+          <ThemedApp />
+        </I18nProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

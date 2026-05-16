@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, FontNames, Radii } from '../theme';
+import { Spacing, FontNames } from '../theme';
+import { useColors, ColorTokens } from '../theme/ThemeContext';
+import { useI18n } from '../i18n/I18nContext';
+import { Strings } from '../i18n/translations';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -18,25 +21,96 @@ interface TabConfig {
   isCamera?: boolean;
 }
 
-const TAB_CONFIG: Record<string, TabConfig> = {
-  Feed:    { label: 'Lịch sử',  icon: 'receipt-outline' },
-  Stats:   { label: 'Thống kê', icon: 'bar-chart-outline' },
-  Camera:  { label: '',         icon: 'camera',            isCamera: true },
-  Budget:  { label: 'Ngân quỹ', icon: 'wallet-outline' },
-  Profile: { label: 'Hồ sơ',   icon: 'flame-outline' },
-};
+function getTabConfig(t: Strings): Record<string, TabConfig> {
+  return {
+    Feed:    { label: t.tabs.feed,    icon: 'receipt-outline' },
+    Stats:   { label: t.tabs.stats,   icon: 'bar-chart-outline' },
+    Camera:  { label: '',             icon: 'camera', isCamera: true },
+    Budget:  { label: t.tabs.budget,  icon: 'wallet-outline' },
+    Profile: { label: t.tabs.profile, icon: 'flame-outline' },
+  };
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    container: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'transparent',
+    },
+    topBorder: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 1,
+      backgroundColor: c.navTopBorder,
+    },
+    tabRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingTop: Spacing.sm,
+    },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: 3,
+      paddingTop: 4,
+    },
+    cameraTab: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingTop: 0,
+    },
+    cameraCircle: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: c.orange,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: -20,
+      // Drop shadow — orange glow
+      shadowColor: c.orange,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.45,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+    label: {
+      fontSize: 10,
+      fontFamily: FontNames.bodyMed,
+      letterSpacing: 0.2,
+    },
+    labelActive: {
+      color: c.inkTextPrimary,
+    },
+  });
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function GlassBottomNav({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const tabConfig = useMemo(() => getTabConfig(t), [t]);
+
   const barHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   return (
     <View style={[styles.container, { height: barHeight }]}>
       {/* Blur background — fallback is fine on Android API < 31 */}
       <BlurView
-        tint="light"
+        tint={colors.navBlurTint}
         intensity={60}
         style={StyleSheet.absoluteFill}
       />
@@ -50,7 +124,7 @@ export default function GlassBottomNav({ state, descriptors, navigation }: Botto
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
           const config: TabConfig =
-            TAB_CONFIG[route.name] ?? {
+            tabConfig[route.name] ?? {
               label: route.name,
               icon: 'ellipse-outline' as IoniconName,
             };
@@ -91,8 +165,8 @@ export default function GlassBottomNav({ state, descriptors, navigation }: Botto
 
           // ── Regular tab ────────────────────────────────────────────────────
           const iconColor = isFocused
-            ? Colors.inkTextPrimary
-            : Colors.inkTextSecondary;
+            ? colors.inkTextPrimary
+            : colors.inkTextSecondary;
 
           return (
             <TouchableOpacity
@@ -124,65 +198,3 @@ export default function GlassBottomNav({ state, descriptors, navigation }: Botto
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'transparent',
-  },
-  topBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: 'rgba(26,20,8,0.08)',
-  },
-  tabRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingTop: Spacing.sm,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: 3,
-    paddingTop: 4,
-  },
-  cameraTab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 0,
-  },
-  cameraCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.orange,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -20,
-    // Drop shadow — orange glow
-    shadowColor: Colors.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  label: {
-    fontSize: 10,
-    fontFamily: FontNames.bodyMed,
-    letterSpacing: 0.2,
-  },
-  labelActive: {
-    color: Colors.inkTextPrimary,
-  },
-});

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,17 @@ import { useMonthlySummary } from '../hooks/useMonthlySummary';
 import DonutChart from '../components/DonutChart';
 import DailyBarChart from '../components/DailyBarChart';
 import TrendCard from '../components/TrendCard';
-import { Colors, Spacing, CATEGORY_META, FontNames, Radii } from '../../../shared/theme';
+import { Spacing, CATEGORY_META, FontNames, Radii } from '../../../shared/theme';
 import { CATEGORIES, Category } from '../../../shared/types';
 import { formatVND } from '../../../shared/utils/currency';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 export default function StatsScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
   const { expenses, refresh } = useExpenses();
 
@@ -84,15 +89,15 @@ export default function StatsScreen() {
       {/* 2. Donut chart centered */}
       <View style={styles.donutSection}>
         <DonutChart summary={summary} />
-        <Text style={styles.avgDayLabel}>{avgPerDay}/ngày</Text>
+        <Text style={styles.avgDayLabel}>{avgPerDay + t.stats.perDay}</Text>
       </View>
 
       {/* 3. Daily bar chart - 14 days */}
-      <Text style={styles.sectionLabel}>14 NGÀY GẦN NHẤT</Text>
+      <Text style={styles.sectionLabel}>{t.stats.last14Days}</Text>
       <DailyBarChart expenses={expenses} />
 
       {/* 4. Category breakdown */}
-      <Text style={styles.sectionLabel}>THEO DANH MỤC</Text>
+      <Text style={styles.sectionLabel}>{t.stats.byCategory}</Text>
       <View style={styles.categoryList}>
         {CATEGORIES.map((cat) => {
           const amount = summary.byCategory[cat] ?? 0;
@@ -121,6 +126,8 @@ interface CategoryRowProps {
 }
 
 function CategoryRow({ cat, amount, pct }: CategoryRowProps) {
+  const colors = useColors();
+  const catStyles = useMemo(() => makeCatStyles(colors), [colors]);
   const meta = CATEGORY_META[cat];
 
   return (
@@ -159,80 +166,84 @@ function CategoryRow({ cat, amount, pct }: CategoryRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.ink0,
-  },
-  content: {
-    gap: Spacing.sm,
-  },
-  donutSection: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-  },
-  avgDayLabel: {
-    fontFamily: FontNames.body,
-    fontSize: 13,
-    color: Colors.inkTextSecondary,
-    marginTop: Spacing.sm,
-    textAlign: 'center',
-  },
-  sectionLabel: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 11,
-    color: Colors.inkTextSecondary,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    paddingHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  categoryList: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.md,
-  },
-});
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: c.ink0,
+    },
+    content: {
+      gap: Spacing.sm,
+    },
+    donutSection: {
+      alignItems: 'center',
+      paddingVertical: Spacing.md,
+    },
+    avgDayLabel: {
+      fontFamily: FontNames.body,
+      fontSize: 13,
+      color: c.inkTextSecondary,
+      marginTop: Spacing.sm,
+      textAlign: 'center',
+    },
+    sectionLabel: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 11,
+      color: c.inkTextSecondary,
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      paddingHorizontal: Spacing.lg,
+      marginTop: Spacing.lg,
+      marginBottom: Spacing.sm,
+    },
+    categoryList: {
+      paddingHorizontal: Spacing.lg,
+      gap: Spacing.md,
+    },
+  });
+}
 
-const catStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  emojiCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: {
-    fontSize: 18,
-  },
-  textGroup: {
-    width: 100,
-    gap: 1,
-  },
-  catName: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 14,
-    color: Colors.inkTextPrimary,
-  },
-  catAmount: {
-    fontFamily: FontNames.amountMed,
-    fontSize: 14,
-    color: Colors.orange,
-  },
-  barTrack: {
-    flex: 1,
-    height: 4,
-    borderRadius: Radii.sm,
-    backgroundColor: Colors.ink2,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: 4,
-    borderRadius: Radii.sm,
-  },
-});
+function makeCatStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    emojiCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emoji: {
+      fontSize: 18,
+    },
+    textGroup: {
+      width: 100,
+      gap: 1,
+    },
+    catName: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 14,
+      color: c.inkTextPrimary,
+    },
+    catAmount: {
+      fontFamily: FontNames.amountMed,
+      fontSize: 14,
+      color: c.orange,
+    },
+    barTrack: {
+      flex: 1,
+      height: 4,
+      borderRadius: Radii.sm,
+      backgroundColor: c.ink2,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: 4,
+      borderRadius: Radii.sm,
+    },
+  });
+}

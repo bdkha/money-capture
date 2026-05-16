@@ -16,18 +16,98 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useExpenses } from '../hooks/useExpenses';
 import FeedCard from '../components/FeedCard';
 import { Expense } from '../../../shared/types';
-import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
+import { Spacing, Radii, FontNames } from '../../../shared/theme';
 import { formatVND } from '../../../shared/utils/currency';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
+import { Strings } from '../../../shared/i18n/translations';
 
-function sectionTitle(dateStr: string): string {
+function sectionTitle(dateStr: string, t: Strings): string {
   const d = parseISO(dateStr);
-  if (isToday(d)) return 'Hôm nay';
-  if (isYesterday(d)) return 'Hôm qua';
+  if (isToday(d)) return t.feed.today;
+  if (isYesterday(d)) return t.feed.yesterday;
   return format(d, "d 'tháng' M", { locale: vi });
+}
+
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.ink0,
+    },
+    header: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.md,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    titleText: {
+      fontFamily: FontNames.title,
+      fontSize: 22,
+      color: c.inkTextPrimary,
+    },
+    totalText: {
+      fontFamily: FontNames.amount,
+      fontSize: 28,
+      color: c.orange,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    flamePill: {
+      backgroundColor: c.ink1,
+      borderRadius: Radii.full,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    flameText: {
+      fontFamily: FontNames.body,
+      fontSize: 12,
+      lineHeight: 17,
+      color: c.inkTextSecondary,
+    },
+    scrollContent: {
+      paddingHorizontal: Spacing.lg,
+    },
+    sectionLabel: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 13,
+      color: c.inkTextSecondary,
+      marginTop: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 80,
+      gap: Spacing.md,
+    },
+    emptyTitle: {
+      fontFamily: FontNames.title,
+      fontSize: 22,
+      color: c.inkTextPrimary,
+      textAlign: 'center',
+    },
+    emptyBody: {
+      fontFamily: FontNames.body,
+      fontSize: 15,
+      lineHeight: 22,
+      color: c.inkTextSecondary,
+      textAlign: 'center',
+    },
+  });
 }
 
 export default function FeedScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { expenses, loading, refresh, remove } = useExpenses();
 
   useFocusEffect(
@@ -59,16 +139,16 @@ export default function FeedScreen() {
     return Array.from(map.entries())
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([date, data]) => ({
-        title: sectionTitle(date),
+        title: sectionTitle(date, t),
         data,
       }));
-  }, [monthExpenses]);
+  }, [monthExpenses, t]);
 
   const handleDelete = (expense: Expense) => {
-    Alert.alert('Xoá khoản chi?', 'Xác nhận xoá?', [
-      { text: 'Huỷ', style: 'cancel' },
+    Alert.alert(t.feed.deleteTitle, t.feed.deleteMessage, [
+      { text: t.feed.deleteCancel, style: 'cancel' },
       {
-        text: 'Xoá',
+        text: t.feed.deleteConfirm,
         style: 'destructive',
         onPress: () => remove(expense.id, expense.photoUri),
       },
@@ -86,17 +166,17 @@ export default function FeedScreen() {
       >
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.titleText}>Tháng {currentMonthNum}</Text>
+            <Text style={styles.titleText}>{t.feed.title} {currentMonthNum}</Text>
             <Text style={styles.totalText}>{formatVND(totalMonthAmount)}</Text>
           </View>
           <View style={styles.headerRight}>
             {/* Flame streak pill */}
             <View style={styles.flamePill}>
-              <Text style={styles.flameText}>🔥 3 ngày</Text>
+              <Text style={styles.flameText}>🔥 3 {t.feed.streakDays}</Text>
             </View>
             {/* Sort icon */}
             <TouchableOpacity activeOpacity={0.7} hitSlop={8}>
-              <Ionicons name="funnel-outline" size={20} color={Colors.inkTextSecondary} />
+              <Ionicons name="funnel-outline" size={20} color={colors.inkTextSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -111,7 +191,7 @@ export default function FeedScreen() {
           <RefreshControl
             refreshing={loading}
             onRefresh={refresh}
-            tintColor={Colors.orange}
+            tintColor={colors.orange}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -132,84 +212,12 @@ export default function FeedScreen() {
         {/* Empty state */}
         {!loading && expenses.length === 0 && (
           <View style={styles.emptyContainer}>
-            <Ionicons name="camera-outline" size={64} color={Colors.ink3} />
-            <Text style={styles.emptyTitle}>Chưa có khoản nào</Text>
-            <Text style={styles.emptyBody}>Chộp ngay thôi!</Text>
+            <Ionicons name="camera-outline" size={64} color={colors.ink3} />
+            <Text style={styles.emptyTitle}>{t.feed.emptyTitle}</Text>
+            <Text style={styles.emptyBody}>{t.feed.emptyBody}</Text>
           </View>
         )}
       </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.ink0,
-  },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  titleText: {
-    fontFamily: FontNames.title,
-    fontSize: 22,
-    color: Colors.inkTextPrimary,
-  },
-  totalText: {
-    fontFamily: FontNames.amount,
-    fontSize: 28,
-    color: Colors.orange,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  flamePill: {
-    backgroundColor: Colors.ink1,
-    borderRadius: Radii.full,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  flameText: {
-    fontFamily: FontNames.body,
-    fontSize: 12,
-    lineHeight: 17,
-    color: Colors.inkTextSecondary,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.lg,
-  },
-  sectionLabel: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 13,
-    color: Colors.inkTextSecondary,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-    gap: Spacing.md,
-  },
-  emptyTitle: {
-    fontFamily: FontNames.title,
-    fontSize: 22,
-    color: Colors.inkTextPrimary,
-    textAlign: 'center',
-  },
-  emptyBody: {
-    fontFamily: FontNames.body,
-    fontSize: 15,
-    lineHeight: 22,
-    color: Colors.inkTextSecondary,
-    textAlign: 'center',
-  },
-});

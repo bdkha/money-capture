@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { format, getDaysInMonth, parseISO } from 'date-fns';
 import { formatVND } from '../../../shared/utils/currency';
 import { Colors, Spacing, FontNames } from '../../../shared/theme';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 interface BudgetCardProps {
   totalCap: number;
@@ -12,6 +14,10 @@ interface BudgetCardProps {
 }
 
 export default function BudgetCard({ totalCap, totalSpent, month }: BudgetCardProps) {
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const remaining = totalCap - totalSpent;
   const pct = totalCap > 0 ? Math.min(Math.max(totalSpent / totalCap, 0), 1) : 0;
 
@@ -25,14 +31,14 @@ export default function BudgetCard({ totalCap, totalSpent, month }: BudgetCardPr
       style={styles.card}
     >
       {/* Label */}
-      <Text style={styles.label}>Còn lại</Text>
+      <Text style={styles.label}>{t.budget.remaining}</Text>
 
       {/* Remaining amount */}
       <Text style={styles.remaining}>{formatVND(remaining)}</Text>
 
       {/* Spent line */}
       <Text style={styles.spent}>
-        Đã chi {formatVND(totalSpent)} / {formatVND(totalCap)}
+        {t.budget.spent} {formatVND(totalSpent)} / {formatVND(totalCap)}
       </Text>
 
       {/* Progress bar */}
@@ -50,66 +56,68 @@ export default function BudgetCard({ totalCap, totalSpent, month }: BudgetCardPr
       {/* Date markers row */}
       <View style={styles.dateRow}>
         <Text style={styles.dateLabel}>1/{monthNum}</Text>
-        <Text style={styles.dateLabelToday}>Hôm nay</Text>
+        <Text style={styles.dateLabelToday}>{t.feed.today}</Text>
         <Text style={styles.dateLabel}>{lastDay}/{monthNum}</Text>
       </View>
     </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 20,
-    padding: Spacing.xl,
-    marginHorizontal: Spacing.lg,
-  },
-  label: {
-    fontFamily: FontNames.bodyMed,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-    marginBottom: 4,
-  },
-  remaining: {
-    fontFamily: FontNames.amount,
-    fontSize: 40,
-    color: '#FFFFFF',
-    lineHeight: 48,
-  },
-  spent: {
-    fontFamily: FontNames.body,
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 6,
-  },
-  barBg: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    marginTop: 16,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  barGradient: {
-    flex: 1,
-    borderRadius: 3,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  dateLabel: {
-    fontFamily: FontNames.body,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
-  },
-  dateLabelToday: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-  },
-});
+function makeStyles(_c: ColorTokens) {
+  return StyleSheet.create({
+    card: {
+      borderRadius: 20,
+      padding: Spacing.xl,
+      marginHorizontal: Spacing.lg,
+    },
+    label: {
+      fontFamily: FontNames.bodyMed,
+      fontSize: 12,
+      color: 'rgba(255,255,255,0.5)',
+      marginBottom: 4,
+    },
+    remaining: {
+      fontFamily: FontNames.amount,
+      fontSize: 40,
+      color: '#FFFFFF',
+      lineHeight: 48,
+    },
+    spent: {
+      fontFamily: FontNames.body,
+      fontSize: 13,
+      color: 'rgba(255,255,255,0.6)',
+      marginTop: 6,
+    },
+    barBg: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      marginTop: 16,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: 6,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    barGradient: {
+      flex: 1,
+      borderRadius: 3,
+    },
+    dateRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 8,
+    },
+    dateLabel: {
+      fontFamily: FontNames.body,
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.5)',
+    },
+    dateLabelToday: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.7)',
+    },
+  });
+}

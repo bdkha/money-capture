@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
-import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
+import { Spacing, Radii, FontNames } from '../../../shared/theme';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 interface TrendCardProps {
   month: string; // 'YYYY-MM'
@@ -21,14 +23,18 @@ export default function TrendCard({
   prevMonthTotal,
   currentMonthTotal,
 }: TrendCardProps) {
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const date = parseISO(month + '-01');
-  const monthNum = format(date, 'M');
-  const year = format(date, 'yyyy');
-  const monthLabel = `Tháng ${monthNum} năm ${year}`;
+  const m = format(date, 'M');
+  const y = format(date, 'yyyy');
+  const monthLabel = t.stats.month + ' ' + m + ' ' + t.stats.year + ' ' + y;
 
   // Compute trend pill info
   let pillBg: string | null = null;
-  let pillTextColor = Colors.inkTextSecondary;
+  let pillTextColor = colors.inkTextSecondary;
   let pillText = '';
   let showPill = false;
 
@@ -38,16 +44,16 @@ export default function TrendCard({
 
     if (pct < 0) {
       pillBg = '#D9EFE3';
-      pillTextColor = Colors.success;
-      pillText = `↓ ${Math.abs(pct).toFixed(0)}% so với tháng trước`;
+      pillTextColor = colors.success;
+      pillText = `↓${Math.abs(pct).toFixed(0)}% ` + t.trend.decrease + ' ' + t.stats.vsLastMonth;
     } else if (pct > 0) {
       pillBg = '#FFE8E8';
-      pillTextColor = Colors.danger;
-      pillText = `↑ ${pct.toFixed(0)}% so với tháng trước`;
+      pillTextColor = colors.danger;
+      pillText = `↑${pct.toFixed(0)}% ` + t.trend.increase + ' ' + t.stats.vsLastMonth;
     } else {
-      pillBg = Colors.ink1;
-      pillTextColor = Colors.inkTextSecondary;
-      pillText = 'Bằng tháng trước';
+      pillBg = colors.ink1;
+      pillTextColor = colors.inkTextSecondary;
+      pillText = t.stats.vsLastMonth;
     }
   }
 
@@ -60,7 +66,7 @@ export default function TrendCard({
           style={styles.arrowButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="chevron-back" size={22} color={Colors.inkTextPrimary} />
+          <Ionicons name="chevron-back" size={22} color={colors.inkTextPrimary} />
         </TouchableOpacity>
 
         <Text style={styles.monthLabel}>{monthLabel}</Text>
@@ -74,7 +80,7 @@ export default function TrendCard({
           <Ionicons
             name="chevron-forward"
             size={22}
-            color={isCurrentMonth ? Colors.ink3 : Colors.inkTextPrimary}
+            color={isCurrentMonth ? colors.ink3 : colors.inkTextPrimary}
           />
         </TouchableOpacity>
       </View>
@@ -93,39 +99,41 @@ export default function TrendCard({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.lg,
-  },
-  monthRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  arrowButton: {
-    padding: Spacing.xs,
-  },
-  arrowDisabled: {
-    opacity: 0.3,
-  },
-  monthLabel: {
-    fontFamily: FontNames.title,
-    fontSize: 17,
-    color: Colors.inkTextPrimary,
-    flex: 1,
-    textAlign: 'center',
-  },
-  pillRow: {
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  pill: {
-    borderRadius: Radii.full,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  pillText: {
-    fontFamily: FontNames.body,
-    fontSize: 12,
-  },
-});
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    container: {
+      paddingHorizontal: Spacing.lg,
+    },
+    monthRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    arrowButton: {
+      padding: Spacing.xs,
+    },
+    arrowDisabled: {
+      opacity: 0.3,
+    },
+    monthLabel: {
+      fontFamily: FontNames.title,
+      fontSize: 17,
+      color: c.inkTextPrimary,
+      flex: 1,
+      textAlign: 'center',
+    },
+    pillRow: {
+      alignItems: 'center',
+      marginTop: Spacing.sm,
+    },
+    pill: {
+      borderRadius: Radii.full,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    pillText: {
+      fontFamily: FontNames.body,
+      fontSize: 12,
+    },
+  });
+}

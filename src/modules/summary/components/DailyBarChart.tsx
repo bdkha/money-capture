@@ -3,8 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import { CartesianChart, Bar } from 'victory-native';
 import { subDays, format, isSameDay } from 'date-fns';
 import { Expense } from '../../../shared/types';
-import { Colors, Spacing, FontNames } from '../../../shared/theme';
+import { Spacing, FontNames } from '../../../shared/theme';
 import { formatVND } from '../../../shared/utils/currency';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 interface DailyBarChartProps {
   expenses: Expense[];
@@ -17,6 +19,10 @@ interface DayData {
 }
 
 export default function DailyBarChart({ expenses }: DailyBarChartProps) {
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const { data, avgPerDay } = useMemo(() => {
     const today = new Date();
     const days = Array.from({ length: 14 }, (_, i) => subDays(today, 13 - i));
@@ -53,8 +59,8 @@ export default function DailyBarChart({ expenses }: DailyBarChartProps) {
           domainPadding={{ left: 6, right: 6, top: 12 }}
           axisOptions={{
             font: null,
-            labelColor: Colors.inkTextSecondary,
-            lineColor: Colors.ink2,
+            labelColor: colors.inkTextSecondary,
+            lineColor: colors.ink2,
             tickCount: { x: 7, y: 4 },
             labelOffset: { x: 4, y: 8 },
             formatXLabel: (val: string) => {
@@ -70,30 +76,32 @@ export default function DailyBarChart({ expenses }: DailyBarChartProps) {
                 key={i}
                 points={[point]}
                 chartBounds={chartBounds}
-                color={data[i]?.isToday ? Colors.orange : Colors.ink3}
+                color={data[i]?.isToday ? colors.orange : colors.ink3}
                 roundedCorners={{ topLeft: 3, topRight: 3 }}
               />
             ))
           }
         </CartesianChart>
       </View>
-      <Text style={styles.avgLabel}>avg {formatVND(avgPerDay)}/ngày</Text>
+      <Text style={styles.avgLabel}>avg {formatVND(avgPerDay)}{t.stats.perDay}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    paddingHorizontal: Spacing.lg,
-  },
-  chartContainer: {
-    height: 200,
-  },
-  avgLabel: {
-    fontFamily: FontNames.body,
-    fontSize: 12,
-    color: Colors.inkTextSecondary,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-  },
-});
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    wrapper: {
+      paddingHorizontal: Spacing.lg,
+    },
+    chartContainer: {
+      height: 200,
+    },
+    avgLabel: {
+      fontFamily: FontNames.body,
+      fontSize: 12,
+      color: c.inkTextSecondary,
+      textAlign: 'center',
+      marginTop: Spacing.sm,
+    },
+  });
+}

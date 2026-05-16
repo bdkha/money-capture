@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { MonthlySummary, CATEGORIES } from '../../../shared/types';
-import { Colors, CATEGORY_META, FontNames } from '../../../shared/theme';
+import { CATEGORY_META, FontNames } from '../../../shared/theme';
 import { formatVND } from '../../../shared/utils/currency';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
+import { useI18n } from '../../../shared/i18n/I18nContext';
 
 interface DonutChartProps {
   summary: MonthlySummary;
@@ -43,6 +45,10 @@ const INNER_R = 48;
 const GAP_DEG = 2; // 1 degree gap on each side of each segment
 
 export default function DonutChart({ summary }: DonutChartProps) {
+  const colors = useColors();
+  const { t } = useI18n();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const { totalCents, byCategory } = summary;
 
   const activeCategories = CATEGORIES.filter((cat) => byCategory[cat] > 0);
@@ -63,11 +69,11 @@ export default function DonutChart({ summary }: DonutChartProps) {
     return (
       <View style={styles.container}>
         <Svg width={160} height={160} viewBox="0 0 160 160">
-          <Path d={emptyPath} fill={Colors.ink3} />
+          <Path d={emptyPath} fill={colors.ink2} />
         </Svg>
         <View style={styles.center} pointerEvents="none">
           <Text style={styles.amountText}>0đ</Text>
-          <Text style={styles.subText}>đã chi</Text>
+          <Text style={styles.subText}>{t.budget.spent}</Text>
         </View>
       </View>
     );
@@ -111,35 +117,37 @@ export default function DonutChart({ summary }: DonutChartProps) {
       </Svg>
       <View style={styles.center} pointerEvents="none">
         <Text style={styles.amountText}>{formatVND(totalCents)}</Text>
-        <Text style={styles.subText}>đã chi</Text>
+        <Text style={styles.subText}>{t.budget.spent}</Text>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: 160,
-    height: 160,
-  },
-  center: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  amountText: {
-    fontFamily: FontNames.amount,
-    fontSize: 18,
-    color: Colors.inkTextPrimary,
-    textAlign: 'center',
-  },
-  subText: {
-    fontFamily: FontNames.body,
-    fontSize: 11,
-    color: Colors.inkTextSecondary,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-});
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    container: {
+      width: 160,
+      height: 160,
+    },
+    center: {
+      position: 'absolute',
+      width: 160,
+      height: 160,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    amountText: {
+      fontFamily: FontNames.amount,
+      fontSize: 18,
+      color: c.inkTextPrimary,
+      textAlign: 'center',
+    },
+    subText: {
+      fontFamily: FontNames.body,
+      fontSize: 11,
+      color: c.inkTextSecondary,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+  });
+}

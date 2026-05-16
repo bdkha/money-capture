@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Category } from '../../../shared/types';
-import { Colors, CATEGORY_META, Radii, FontNames } from '../../../shared/theme';
+import { CATEGORY_META, Radii, FontNames } from '../../../shared/theme';
+import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
 
 interface CategoryPillProps {
   category: Category;
@@ -9,7 +10,32 @@ interface CategoryPillProps {
   onPress: () => void;
 }
 
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: Radii.full,
+      borderWidth: 1.5,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      gap: 4,
+      marginRight: 8,
+    },
+    emoji: {
+      fontSize: 14,
+    },
+    label: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 13,
+    },
+  });
+}
+
 export default function CategoryPill({ category, selected, onPress }: CategoryPillProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const meta = CATEGORY_META[category];
   const { color, emoji } = meta;
 
@@ -25,8 +51,8 @@ export default function CategoryPill({ category, selected, onPress }: CategoryPi
               borderColor: color,
             }
           : {
-              backgroundColor: Colors.ink1,
-              borderColor: Colors.ink2,
+              backgroundColor: colors.ink1,
+              borderColor: colors.ink2,
             },
       ]}
     >
@@ -34,7 +60,7 @@ export default function CategoryPill({ category, selected, onPress }: CategoryPi
       <Text
         style={[
           styles.label,
-          { color: selected ? color : Colors.inkTextSecondary },
+          { color: selected ? color : colors.inkTextSecondary },
         ]}
       >
         {category}
@@ -42,23 +68,3 @@ export default function CategoryPill({ category, selected, onPress }: CategoryPi
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: Radii.full,
-    borderWidth: 1.5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 4,
-    marginRight: 8,
-  },
-  emoji: {
-    fontSize: 14,
-  },
-  label: {
-    fontFamily: FontNames.bodySemi,
-    fontSize: 13,
-  },
-});
