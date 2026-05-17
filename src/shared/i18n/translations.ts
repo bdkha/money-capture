@@ -11,7 +11,7 @@ export const translations = {
       today: 'Hôm nay',
       yesterday: 'Hôm qua',
       emptyTitle: 'Chưa có khoản nào',
-      emptyBody: 'Chộp ngay thôi!',
+      emptyBody: 'Chụp ngay thôi!',
       streakDays: 'ngày',
       deleteTitle: 'Xoá khoản chi?',
       deleteMessage: 'Xác nhận xoá?',
@@ -27,7 +27,7 @@ export const translations = {
     },
     camera: {
       modeReceipt: 'Hoá đơn',
-      modeQuick: 'Chộp nhanh',
+      modeQuick: 'Chụp nhanh',
       modeManual: 'Thủ công',
     },
     stats: {
@@ -53,7 +53,7 @@ export const translations = {
     },
     profile: {
       title: 'Hồ sơ của tôi',
-      calendar: 'LỊCH CHỘP',
+      calendar: 'LỊCH CHỤP',
       friends: 'BẠN BÈ',
       friendSub: 'Bạn bè',
       invite: 'Mời bạn bè',
@@ -66,7 +66,7 @@ export const translations = {
       streakDays: 'ngày',
     },
     streak: {
-      label: 'Streak chộp',
+      label: 'Streak chụp',
       days: 'ngày',
       longest: 'Dài nhất',
     },

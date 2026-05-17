@@ -114,6 +114,10 @@ export default function GlassBottomNav({
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const tabConfig = useMemo(() => getTabConfig(t), [t]);
 
+  const focusedDescriptor = descriptors[state.routes[state.index].key];
+  const tabBarStyle = focusedDescriptor.options.tabBarStyle as Record<string, unknown> | undefined;
+  if (tabBarStyle?.display === 'none') return null;
+
   const barHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   return (

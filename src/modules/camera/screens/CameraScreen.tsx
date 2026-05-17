@@ -1,10 +1,9 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   Image,
   Platform,
 } from 'react-native';
@@ -21,8 +20,10 @@ import ShutterButton from '../components/ShutterButton';
 import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
 import { RootStackParamList } from '../../../shared/navigation/RootNavigator';
 import { useExpenses } from '../../expenses/hooks/useExpenses';
+import { useStreak } from '../../profile/hooks/useStreak';
 import { formatVND } from '../../../shared/utils/currency';
 import { useI18n } from '../../../shared/i18n/I18nContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,8 +33,6 @@ type CaptureMode = string;
 
 const LAST_CAPTURE_KEY = '@chopp:last_capture';
 
-// Streak is hard-coded for now until a streak module is wired up
-const STREAK_DAYS = 3;
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -219,6 +218,7 @@ const styles = StyleSheet.create({
 
 export default function CameraScreen() {
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
 
   const MODES: CaptureMode[] = [t.camera.modeReceipt, t.camera.modeQuick, t.camera.modeManual];
 
@@ -226,13 +226,14 @@ export default function CameraScreen() {
   const [capturing, setCapturing] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
   const [lastUri, setLastUri] = useState<string | null>(null);
-  const [mode, setMode] = useState<CaptureMode>(t.camera.modeReceipt);
+  const [mode, setMode] = useState<CaptureMode>(t.camera.modeQuick);
 
   const cameraRef = useRef<CameraView>(null);
   const navigation = useNavigation<Nav>();
   const [permission, requestPermission] = useCameraPermissions();
 
   const { expenses } = useExpenses();
+  const { currentStreak } = useStreak(expenses);
 
   // ── Load persisted last-capture thumbnail on mount ─────────────────────────
   useEffect(() => {
@@ -287,7 +288,7 @@ export default function CameraScreen() {
         <Ionicons name="camera-outline" size={64} color={Colors.inkTextSecondary} />
         <Text style={styles.permissionTitle}>Cần quyền camera</Text>
         <Text style={styles.permissionBody}>
-          Chộp cần truy cập máy ảnh để chụp hoá đơn và chi tiêu của bạn.
+          Chụp cần truy cập máy ảnh để chụp hoá đơn và chi tiêu của bạn.
         </Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Cho phép</Text>
@@ -324,11 +325,11 @@ export default function CameraScreen() {
       />
 
       {/* ── Top overlay ──────────────────────────────────────────────────── */}
-      <SafeAreaView style={styles.topOverlay}>
+      <View style={[styles.topOverlay, { paddingTop: insets.top }]}>
         <View style={styles.topRow}>
           {/* Streak pill */}
           <View style={styles.glassPill}>
-            <Text style={styles.pillText}>🔥 {STREAK_DAYS} {t.feed.streakDays}</Text>
+            <Text style={styles.pillText}>🔥 {currentStreak} {t.feed.streakDays}</Text>
           </View>
 
           {/* Today's spend pill */}
@@ -349,10 +350,10 @@ export default function CameraScreen() {
             />
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* ── Bottom overlay ───────────────────────────────────────────────── */}
-      <SafeAreaView style={styles.bottomOverlay}>
+      <View style={[styles.bottomOverlay, { paddingBottom: insets.bottom }]}>
         {/* Mode selector tabs */}
         <View style={styles.modeTabRow}>
           {MODES.map((m) => (
@@ -398,7 +399,7 @@ export default function CameraScreen() {
             <Ionicons name="camera-reverse-outline" size={28} color="#FFF" />
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
