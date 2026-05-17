@@ -2,24 +2,24 @@ import { Category } from '../types';
 
 export const Colors = {
   // Page & surface
-  ink0: '#FBF6EE',
-  ink1: '#F3EDE3',
-  ink2: '#E8DFD2',
-  ink3: '#D4C9B8',
-  ink4: '#B8A898',
+  ink0: '#F0F7F4',
+  ink1: '#E8F3EE',
+  ink2: '#D8EDE4',
+  ink3: '#C2DDD1',
+  ink4: '#A0C4B4',
 
   // Text
   inkTextPrimary: '#1A1208',
   inkTextSecondary: '#7A6A58',
-  inkTextTertiary: '#A89880',
+  inkTextTertiary: '#A0B4A8',
 
-  // Accent
-  orange: '#FF6B35',
-  orangeMuted: '#FF9A70',
-  orangeDeep: '#E8521A',
+  // Accent (green pastel)
+  orange: '#6FB88E',
+  orangeMuted: '#9DD4B4',
+  orangeDeep: '#5DA67D',
 
   // Status
-  success: '#2F8769',
+  success: '#4A9E7B',
   danger: '#D63B2F',
 
   // Camera screen (dark)
@@ -27,12 +27,15 @@ export const Colors = {
   camGlass: 'rgba(255,255,255,0.10)',
 
   // Budget hero gradient
-  budgetHeroStart: '#1A1410',
-  budgetHeroEnd: '#2A2018',
+  budgetHeroStart: '#0D1A12',
+  budgetHeroEnd: '#162A1C',
 
   // Streak gradient
-  streakStart: '#FF6B35',
-  streakEnd: '#E8521A',
+  streakStart: '#6FB88E',
+  streakEnd: '#5DA67D',
+
+  // Gold accent (new)
+  gold: '#E8A93C',
 };
 
 export const CATEGORY_META: Record<Category, { color: string; emoji: string }> = {
