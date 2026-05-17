@@ -15,6 +15,7 @@ import {
   useCameraPermissions,
 } from "expo-camera";
 import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -41,11 +42,41 @@ const LAST_CAPTURE_KEY = "@chopp:last_capture";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+function CornerBrackets({ top, height }: { top: number; height: number }) {
+  const L = 24;
+  const T = 3;
+  const C = 'rgba(255,255,255,0.85)';
+  const arm = (w: number, h: number) => ({ width: w, height: h, backgroundColor: C } as const);
+  return (
+    <View style={{ position: 'absolute', top, left: 0, right: 0, height }} pointerEvents="none">
+      {/* Top-left */}
+      <View style={{ position: 'absolute', top: 0, left: 0 }}>
+        <View style={arm(L, T)} />
+        <View style={[arm(T, L), { marginTop: -T }]} />
+      </View>
+      {/* Top-right */}
+      <View style={{ position: 'absolute', top: 0, right: 0, alignItems: 'flex-end' }}>
+        <View style={arm(L, T)} />
+        <View style={[arm(T, L), { marginTop: -T }]} />
+      </View>
+      {/* Bottom-left */}
+      <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
+        <View style={[arm(T, L), { marginBottom: -T }]} />
+        <View style={arm(L, T)} />
+      </View>
+      {/* Bottom-right */}
+      <View style={{ position: 'absolute', bottom: 0, right: 0, alignItems: 'flex-end' }}>
+        <View style={[arm(T, L), { marginBottom: -T }]} />
+        <View style={arm(L, T)} />
+      </View>
+    </View>
+  );
+}
+
 export default function CameraScreen() {
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const frameOverlayHeight = Math.max(0, (screenHeight - screenWidth) / 2);
 
   const MODES: CaptureMode[] = [
     t.camera.modeReceipt,
@@ -58,6 +89,12 @@ export default function CameraScreen() {
   const [flashOn, setFlashOn] = useState(false);
   const [lastUri, setLastUri] = useState<string | null>(null);
   const [mode, setMode] = useState<CaptureMode>(t.camera.modeQuick);
+
+  const isReceiptMode = mode === t.camera.modeReceipt;
+  const frameHeight = isReceiptMode
+    ? Math.min(Math.round(screenWidth * (4 / 3)), Math.round(screenHeight * 0.75))
+    : screenWidth;
+  const frameOverlayHeight = Math.max(0, (screenHeight - frameHeight) / 2);
 
   const cameraRef = useRef<CameraView>(null);
   const navigation = useNavigation<Nav>();
@@ -92,19 +129,22 @@ export default function CameraScreen() {
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
       if (photo?.uri) {
-        const size = Math.min(photo.width, photo.height);
+        let cropW: number, cropH: number, originX: number, originY: number;
+        if (isReceiptMode) {
+          cropW = photo.width;
+          cropH = Math.min(photo.height, Math.round(photo.width * (4 / 3)));
+          originX = 0;
+          originY = Math.max(0, Math.round((photo.height - cropH) / 2));
+        } else {
+          const size = Math.min(photo.width, photo.height);
+          cropW = size;
+          cropH = size;
+          originX = Math.round((photo.width - size) / 2);
+          originY = Math.round((photo.height - size) / 2);
+        }
         const cropped = await ImageManipulator.manipulateAsync(
           photo.uri,
-          [
-            {
-              crop: {
-                originX: (photo.width - size) / 2,
-                originY: (photo.height - size) / 2,
-                width: size,
-                height: size,
-              },
-            },
-          ],
+          [{ crop: { originX, originY, width: cropW, height: cropH } }],
           { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
         );
         await AsyncStorage.setItem(LAST_CAPTURE_KEY, cropped.uri);
@@ -114,7 +154,21 @@ export default function CameraScreen() {
     } finally {
       setCapturing(false);
     }
-  }, [capturing, navigation]);
+  }, [capturing, navigation, isReceiptMode]);
+
+  const handlePickFromGallery = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: false,
+    });
+    if (!result.canceled && result.assets[0]?.uri) {
+      const uri = result.assets[0].uri;
+      await AsyncStorage.setItem(LAST_CAPTURE_KEY, uri);
+      setLastUri(uri);
+      navigation.navigate("Preview", { tempUri: uri });
+    }
+  }, [navigation]);
 
   const toggleFacing = useCallback(() => {
     setFacing((f) => (f === "back" ? "front" : "back"));
@@ -175,13 +229,8 @@ export default function CameraScreen() {
         pointerEvents="none"
       />
 
-      {/* 1:1 frame overlays */}
-      <View
-        style={[styles.frameOverlay, { top: 0, height: frameOverlayHeight }]}
-      />
-      <View
-        style={[styles.frameOverlay, { bottom: 0, height: frameOverlayHeight }]}
-      />
+      {/* Viewfinder corner brackets */}
+      <CornerBrackets top={frameOverlayHeight} height={frameHeight} />
 
       {/* ── Top overlay ──────────────────────────────────────────────────── */}
       <View style={[styles.topOverlay, { paddingTop: insets.top }]}>
@@ -239,7 +288,7 @@ export default function CameraScreen() {
         {/* Shutter row */}
         <View style={styles.shutterRow}>
           {/* Last capture thumbnail */}
-          <TouchableOpacity style={styles.thumbnailSlot} activeOpacity={0.75}>
+          <TouchableOpacity style={styles.thumbnailSlot} activeOpacity={0.75} onPress={handlePickFromGallery}>
             {lastUri ? (
               <Image source={{ uri: lastUri }} style={styles.thumbnail} />
             ) : (
@@ -442,11 +491,4 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.2)",
   },
 
-  frameOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    pointerEvents: "none",
-  } as any,
 });
