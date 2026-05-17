@@ -1,0 +1,96 @@
+name: EAS Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - "**"
+
+# Cancel in-flight runs for the same branch/PR when a new commit is pushed
+concurrency:
+  group: eas-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: EAS Build (${{ github.ref_type == 'tag' || github.ref == 'refs/heads/main' && 'release' || 'preview' }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --force
+
+      # expo-github-action installs expo-cli and eas-cli, and authenticates
+      # using EXPO_TOKEN so every subsequent eas command is already logged in.
+      - name: Set up Expo + EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # Determine the profile once so the build step stays readable.
+      # Rules:
+      #   push to a version tag (v*)  → release
+      #   push / merge to main        → release
+      #   everything else             → preview
+      - name: Resolve EAS build profile
+        id: profile
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]] || \
+             [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "name=release" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=preview" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Android APK via EAS
+        run: |
+          eas build \
+            --platform android \
+            --profile ${{ steps.profile.outputs.name }} \
+            --non-interactive \
+            --wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # Write the download URL to the job summary so it's visible in the
+      # GitHub Actions UI without having to dig into the EAS dashboard.
+      - name: Post APK URL to job summary
+        if: success()
+        run: |
+          URL=$(eas build:list \
+            --platform android \
+            --status finished \
+            --limit 1 \
+            --non-interactive \
+            --json \
+            | python3 -c "
+          import json, sys
+          builds = json.load(sys.stdin)
+          if builds:
+              print(builds[0].get('artifacts', {}).get('buildUrl', ''))
+          " 2>/dev/null || echo "")
+
+          if [ -n "$URL" ]; then
+            {
+              echo "### APK Build Complete"
+              echo ""
+              echo "**Profile:** \`${{ steps.profile.outputs.name }}\`"
+              echo "**Branch/tag:** \`${{ github.ref_name }}\`"
+              echo ""
+              echo "[Download APK]($URL)"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
