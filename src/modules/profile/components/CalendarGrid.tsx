@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import {
   format,
   startOfMonth,
@@ -18,13 +18,14 @@ import { useI18n } from '../../../shared/i18n/I18nContext';
 interface CalendarGridProps {
   activeDates: Set<string>;
   expenseCountByDate: Record<string, number>;
+  photoByDate?: Record<string, string>;
   month?: Date;
 }
 
 const CARD_PADDING = 16;
 const GAP = 4;
 
-export default function CalendarGrid({ activeDates, expenseCountByDate, month }: CalendarGridProps) {
+export default function CalendarGrid({ activeDates, expenseCountByDate, photoByDate, month }: CalendarGridProps) {
   const colors = useColors();
   const { t } = useI18n();
   const { width } = useWindowDimensions();
@@ -118,6 +119,7 @@ export default function CalendarGrid({ activeDates, expenseCountByDate, month }:
             const count = expenseCountByDate[dateStr] ?? 0;
             const bg = getCellBg(dateStr, count, isFuture);
 
+            const photo = photoByDate?.[dateStr];
             return (
               <View
                 key={dateStr}
@@ -126,7 +128,15 @@ export default function CalendarGrid({ activeDates, expenseCountByDate, month }:
                   { backgroundColor: bg, width: cellSize, height: cellSize },
                   isToday && styles.todayCell,
                 ]}
-              />
+              >
+                {photo ? (
+                  <Image
+                    source={{ uri: photo }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="cover"
+                  />
+                ) : null}
+              </View>
             );
           })}
         </View>
@@ -172,6 +182,7 @@ function makeStyles(c: ColorTokens) {
     cell: {
       borderRadius: 6,
       margin: GAP / 2,
+      overflow: 'hidden',
     },
     todayCell: {
       borderWidth: 2,

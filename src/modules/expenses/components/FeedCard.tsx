@@ -31,7 +31,7 @@ function makeStyles(c: ColorTokens) {
     },
     card: {
       width: CARD_WIDTH,
-      aspectRatio: 4 / 3,
+      aspectRatio: 1,
       borderRadius: 16,
       overflow: 'hidden',
       backgroundColor: c.ink2,
