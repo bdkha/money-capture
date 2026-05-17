@@ -10,6 +10,7 @@ import StatsScreen from '../../modules/summary/screens/StatsScreen';
 import BudgetScreen from '../../modules/budget/screens/BudgetScreen';
 import ProfileScreen from '../../modules/profile/screens/ProfileScreen';
 import PreviewScreen from '../../modules/expenses/screens/PreviewScreen';
+import SettingsScreen from '../../modules/profile/screens/SettingsScreen';
 
 // ─── Param Lists ──────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ export type TabParamList = {
 export type RootStackParamList = {
   Tabs: undefined;
   Preview: { tempUri: string };
+  Settings: undefined;
 };
 
 // ─── Navigators ──────────────────────────────────────────────────────────────
@@ -86,6 +88,11 @@ export default function RootNavigator() {
         name="Preview"
         component={PreviewScreen}
         options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>
   );
