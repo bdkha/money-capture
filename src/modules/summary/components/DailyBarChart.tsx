@@ -13,6 +13,7 @@ interface DailyBarChartProps {
 }
 
 interface DayData {
+  [key: string]: string | number | boolean;
   x: string;
   amount: number;
   isToday: boolean;
@@ -50,27 +51,19 @@ export default function DailyBarChart({ expenses }: DailyBarChartProps) {
   }, [expenses]);
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>{t.stats.last14Days}</Text>
+        <Text style={styles.avgLabel}>TB {formatVND(avgPerDay)}{t.stats.perDay}</Text>
+      </View>
       <View style={styles.chartContainer}>
         <CartesianChart
           data={data}
           xKey="x"
           yKeys={['amount']}
           domainPadding={{ left: 6, right: 6, top: 12 }}
-          axisOptions={{
-            font: null,
-            labelColor: colors.inkTextSecondary,
-            lineColor: colors.ink2,
-            tickCount: { x: 7, y: 4 },
-            labelOffset: { x: 4, y: 8 },
-            formatXLabel: (val: string) => {
-              const idx = data.findIndex((d) => d.x === val);
-              return idx % 2 === 0 ? val : '';
-            },
-            formatYLabel: (val: number) => (val > 0 ? formatVND(val) : ''),
-          }}
         >
-          {({ points, chartBounds }: { points: { amount: { x: number; y: number | null }[] }; chartBounds: { left: number; right: number; top: number; bottom: number } }) =>
+          {({ points, chartBounds }) =>
             points.amount.map((point, i) => (
               <Bar
                 key={i}
@@ -83,25 +76,41 @@ export default function DailyBarChart({ expenses }: DailyBarChartProps) {
           }
         </CartesianChart>
       </View>
-      <Text style={styles.avgLabel}>avg {formatVND(avgPerDay)}{t.stats.perDay}</Text>
     </View>
   );
 }
 
 function makeStyles(c: ColorTokens) {
   return StyleSheet.create({
-    wrapper: {
-      paddingHorizontal: Spacing.lg,
+    card: {
+      backgroundColor: c.cardBg,
+      borderRadius: 20,
+      marginHorizontal: Spacing.lg,
+      padding: 20,
+      shadowColor: '#281910',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.18,
+      shadowRadius: 24,
+      elevation: 8,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 14,
+    },
+    cardTitle: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 14,
+      color: c.inkTextPrimary,
     },
     chartContainer: {
-      height: 200,
+      height: 120,
     },
     avgLabel: {
       fontFamily: FontNames.body,
       fontSize: 12,
       color: c.inkTextSecondary,
-      textAlign: 'center',
-      marginTop: Spacing.sm,
     },
   });
 }
