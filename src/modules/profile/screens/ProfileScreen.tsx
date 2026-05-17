@@ -48,6 +48,14 @@ export default function ProfileScreen() {
     return map;
   }, [expenses]);
 
+  const photoByDate = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const exp of expenses) {
+      if (!map[exp.date]) map[exp.date] = exp.photoUri;
+    }
+    return map;
+  }, [expenses]);
+
   return (
     <ScrollView
       style={styles.screen}
@@ -75,6 +83,7 @@ export default function ProfileScreen() {
       <CalendarGrid
         activeDates={streak.activeDates}
         expenseCountByDate={expenseCountByDate}
+        photoByDate={photoByDate}
       />
 
       {/* Friends section */}
