@@ -27,7 +27,6 @@ import ShutterButton from "../components/ShutterButton";
 import { Colors, Spacing, Radii, FontNames } from "../../../shared/theme";
 import { RootStackParamList } from "../../../shared/navigation/RootNavigator";
 import { useExpenses } from "../../expenses/hooks/useExpenses";
-import { useStreak } from "../../profile/hooks/useStreak";
 import { formatVND } from "../../../shared/utils/currency";
 import { useI18n } from "../../../shared/i18n/I18nContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -65,7 +64,6 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
 
   const { expenses } = useExpenses();
-  const { currentStreak } = useStreak(expenses);
 
   // ── Load persisted last-capture thumbnail on mount ─────────────────────────
   useEffect(() => {
@@ -188,12 +186,14 @@ export default function CameraScreen() {
       {/* ── Top overlay ──────────────────────────────────────────────────── */}
       <View style={[styles.topOverlay, { paddingTop: insets.top }]}>
         <View style={styles.topRow}>
-          {/* Streak pill */}
-          <View style={styles.glassPill}>
-            <Text style={styles.pillText}>
-              🔥 {currentStreak} {t.feed.streakDays}
-            </Text>
-          </View>
+          {/* Close button */}
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.flashButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close" size={22} color="#FFF" />
+          </TouchableOpacity>
 
           {/* Today's spend pill */}
           <View style={styles.glassPill}>
