@@ -51,7 +51,8 @@
           "photosPermission": "Cho phép Chộp lưu ảnh hoá đơn."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ],
     "extra": {
       "eas": {

@@ -1,0 +1,146 @@
+name: Dev Client Build
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "app.json"
+      - "app.config.js"
+      - "app.config.ts"
+      - "eas.json"
+      - "ios/**"
+      - "android/**"
+      - "**.podspec"
+      - "**.gradle"
+
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Target platform"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - android
+          - ios
+
+# Cancel in-flight dev-client builds for the same ref when a newer commit
+# triggers this workflow — avoids wasting EAS build minutes on stale code.
+concurrency:
+  group: dev-client-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: EAS Dev Client (${{ github.event_name == 'workflow_dispatch' && inputs.platform || 'all' }})
+    runs-on: ubuntu-latest
+
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js 20 with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --force
+
+      # expo-github-action handles expo-cli + eas-cli installation and
+      # authenticates the session via EXPO_TOKEN for all subsequent eas commands.
+      - name: Set up Expo + EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # Resolve which platform to build. On push events we always build both;
+      # on workflow_dispatch we honour the caller's choice.
+      - name: Resolve target platform
+        id: platform
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "target=${{ inputs.platform }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=all" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build dev client via EAS
+        run: |
+          eas build \
+            --profile development \
+            --platform ${{ steps.platform.outputs.target }} \
+            --non-interactive \
+            --wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # Fetch the most recent finished development builds and post their
+      # download URLs to the job summary for easy access without leaving GitHub.
+      - name: Post build URL(s) to job summary
+        if: success()
+        run: |
+          PLATFORM="${{ steps.platform.outputs.target }}"
+
+          fetch_url() {
+            local plat="$1"
+            eas build:list \
+              --platform "$plat" \
+              --status finished \
+              --limit 1 \
+              --non-interactive \
+              --json \
+              | python3 -c "
+          import json, sys
+          builds = json.load(sys.stdin)
+          if builds:
+              url = builds[0].get('artifacts', {}).get('buildUrl', '')
+              if url:
+                  print(url)
+          " 2>/dev/null || true
+          }
+
+          {
+            echo "### Dev Client Build Complete"
+            echo ""
+            echo "**Profile:** \`development\`"
+            echo "**Platform:** \`${PLATFORM}\`"
+            echo "**Branch:** \`${{ github.ref_name }}\`"
+            echo "**Commit:** \`${{ github.sha }}\`"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "android" ]; then
+            ANDROID_URL=$(fetch_url android)
+            if [ -n "$ANDROID_URL" ]; then
+              echo "- **Android:** [Download build]($ANDROID_URL)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- **Android:** URL unavailable — check the [EAS dashboard](https://expo.dev/accounts/bdk23/projects/money-cat/builds)" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+          if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "ios" ]; then
+            IOS_URL=$(fetch_url ios)
+            if [ -n "$IOS_URL" ]; then
+              echo "- **iOS:** [Download build]($IOS_URL)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- **iOS:** URL unavailable — check the [EAS dashboard](https://expo.dev/accounts/bdk23/projects/money-cat/builds)" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "> Builds are distributed internally. Install via [Expo Go](https://expo.dev/go) or the EAS dashboard." >> "$GITHUB_STEP_SUMMARY"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
