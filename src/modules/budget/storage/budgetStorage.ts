@@ -1,10 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../../../shared/database/db';
 import { MonthBudget, CATEGORIES, Category } from '../../../shared/types';
 
-const BUDGET_KEY = '@chopp:budgets';
-
-const DEFAULT_CAP_PER_CATEGORY = 500_000; // 500k VND
-const DEFAULT_TOTAL_CAP = 3_000_000; // 3tr VND
+const DEFAULT_CAP_PER_CATEGORY = 500_000;
+const DEFAULT_TOTAL_CAP = 3_000_000;
 
 function defaultBudget(month: string): MonthBudget {
   return {
@@ -18,23 +16,20 @@ function defaultBudget(month: string): MonthBudget {
 }
 
 export async function loadBudget(month: string): Promise<MonthBudget> {
-  try {
-    const raw = await AsyncStorage.getItem(BUDGET_KEY);
-    if (!raw) return defaultBudget(month);
-    const all = JSON.parse(raw) as Record<string, MonthBudget>;
-    return all[month] ?? defaultBudget(month);
-  } catch {
-    return defaultBudget(month);
-  }
+  const row = db.getFirstSync<any>('SELECT * FROM budgets WHERE month = ?', [month]);
+  if (!row) return defaultBudget(month);
+  return {
+    month: row.month,
+    totalCapCents: row.total_cap,
+    categories: JSON.parse(row.categories),
+  };
 }
 
 export async function saveBudget(budget: MonthBudget): Promise<void> {
-  try {
-    const raw = await AsyncStorage.getItem(BUDGET_KEY);
-    const all = raw ? (JSON.parse(raw) as Record<string, MonthBudget>) : {};
-    all[budget.month] = budget;
-    await AsyncStorage.setItem(BUDGET_KEY, JSON.stringify(all));
-  } catch {}
+  db.runSync(
+    'INSERT OR REPLACE INTO budgets (month, total_cap, categories) VALUES (?, ?, ?)',
+    [budget.month, budget.totalCapCents, JSON.stringify(budget.categories)],
+  );
 }
 
 export async function updateCategoryBudget(
