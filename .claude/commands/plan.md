@@ -33,7 +33,18 @@ tự đặc biệt). Ví dụ:
 ls plans/ 2>/dev/null || echo "plans dir empty"
 ```
 
-## Bước 2 — Khám phá codebase liên quan
+## Bước 2 — Tư duy trước khi code
+
+Trước khi đọc code, ghi rõ (chỉ trong đầu, không cần output):
+
+1. **Assumptions** — những gì mình giả định về task (platform, lib version, behavior). Nếu assumption sai → plan sai.
+2. **Unknowns** — điều gì chưa rõ có thể đổi hướng approach? Nếu có unknown nghiêm trọng → hỏi user trước, đừng plan dựa trên guess.
+3. **Simplest approach** — cách đơn giản nhất để đạt AC là gì? Không thêm abstraction, không "tương lai-proof" nếu không cần.
+4. **Tradeoffs** — nếu approach đơn giản nhất có vấn đề (edge case, performance, breaking change), ghi lý do chọn approach khác vào plan.
+
+> Nếu sau bước này vẫn còn unknown nghiêm trọng → **dừng lại, hỏi user**, đừng tiếp tục.
+
+## Bước 3 — Khám phá codebase liên quan
 
 Dựa vào từ khóa trong task, tìm các file liên quan:
 
@@ -52,7 +63,7 @@ liên quan. Ghi nhớ:
 - Line number của code cần thay đổi
 - Dependencies (import, hooks, props) liên quan
 
-## Bước 3 — Phân tích và soạn plan
+## Bước 4 — Phân tích và soạn plan
 
 Xác định rõ:
 1. **Hiện trạng** — code đang làm gì, tại file nào, line nào
@@ -60,7 +71,7 @@ Xác định rõ:
 3. **Approach** — cách fix cụ thể (không phải approach chung chung)
 4. **Scope** — đúng các file nào cần sửa, không sửa file nào không cần thiết
 
-## Bước 4 — Tạo file plan
+## Bước 5 — Tạo file plan
 
 ```bash
 mkdir -p plans/<slug>
@@ -68,7 +79,7 @@ mkdir -p plans/<slug>
 
 Viết `plans/<slug>/plan.md` theo template bên dưới.
 
-## Bước 5 — Report
+## Bước 6 — Report
 
 In ra:
 ```
@@ -84,9 +95,21 @@ Tóm tắt 2-3 dòng về approach được chọn.
 ```markdown
 # Plan: {Tên task đầy đủ}
 
-## AC
-{Acceptance criteria — điều kiện "done" cụ thể, observable, không mơ hồ.
-Viết dạng: "Khi X thì Y", hoặc "Component Z không còn dùng A"}
+## AC (Acceptance Criteria)
+
+{Mỗi criterion phải observable và testable — có cách kiểm tra cụ thể khi chạy app hoặc đọc code.
+
+✅ Tốt: "Bottom tab không hiển thị khi navigate đến CameraScreen"
+❌ Tệ: "UX tốt hơn" / "Code sạch hơn"
+
+Viết dạng: "Khi X thì Y", hoặc "File Z không còn import A"}
+
+## Verification
+
+{Ghi cụ thể cách kiểm tra từng AC ở trên:
+- Chạy lệnh nào? Navigate đến màn hình nào? Đọc file nào?
+- Ví dụ: "Mở app → Camera tab → bottom tab không hiển thị"
+- Ví dụ: "grep -r 'SafeAreaView' src/modules/camera — không có kết quả"}
 
 ## Hiện trạng
 
@@ -120,11 +143,17 @@ Không viết chung chung, phải specific với code này.}
 
 ## Scope
 
+**Files thay đổi:**
+
 | File | Thay đổi |
 |------|----------|
 | `path/to/file.tsx` | {Mô tả ngắn — "Xóa import X, thêm hook Y"} |
 
-{Nếu có file KHÔNG cần thay đổi dù trông có vẻ liên quan, note rõ lý do để tránh nhầm lẫn.}
+**Files KHÔNG thay đổi** (dù trông có vẻ liên quan):
+
+| File | Lý do bỏ qua |
+|------|--------------|
+| `path/to/other.tsx` | {Lý do — "chỉ re-export, không chứa logic cần sửa"} |
 
 ## Lưu ý / Caveats
 
@@ -142,4 +171,8 @@ Xóa section này nếu không có gì đặc biệt.}
 - Không tạo plan cho task quá lớn (nhiều hơn ~5 file) — gợi ý user chia nhỏ thành nhiều task
 - Viết bằng tiếng Việt, code snippet giữ nguyên tiếng Anh
 - Không thực thi plan — chỉ tạo file plan
+- **Think first**: nếu còn unknown nghiêm trọng sau Bước 2, hỏi user trước khi tiếp tục
+- **Simplicity first**: chọn approach đơn giản nhất đáp ứng AC — nếu phức tạp hơn, ghi lý do trong plan
+- **Surgical**: mỗi file trong Scope phải có lý do rõ ràng — nếu không chắc file đó cần sửa, mặc định KHÔNG sửa
+- **AC phải testable**: mỗi criterion có cách verify cụ thể, ghi trong section "Verification"
 </rules>

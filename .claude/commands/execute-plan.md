@@ -86,12 +86,14 @@ Thực thi plan dưới đây bằng cách áp dụng chính xác các thay đ�
 
 ## Hướng dẫn thực thi
 
+0. **Goal first**: đọc section "## AC" và "## Verification" trong plan trước — đây là đích đến, các steps chỉ là phương tiện
 1. Đọc từng file trong section "## Thay đổi cần làm" TRƯỚC khi edit
 2. Dùng Edit tool cho thay đổi nhỏ/targeted (preferred) — chỉ dùng Write khi tạo file mới
 3. Thực hiện ĐÚNG theo plan — không refactor thêm, không cleanup ngoài scope
 4. Nếu code hiện tại khác với "Hiện trạng" trong plan (file đã bị sửa), hãy
    adapt thay đổi cho phù hợp với state hiện tại thay vì báo lỗi
-5. Sau khi xong, trả về danh sách files đã thay đổi và tóm tắt ngắn mỗi file
+5. Nếu thấy bug/issue ngoài scope, **không fix** — ghi vào RESULT dưới key `noticed`
+6. Sau khi xong, chạy verification steps từ section "## Verification" (nếu có) để xác nhận AC
 
 ## Output format (bắt buộc)
 
@@ -99,6 +101,8 @@ Kết thúc response bằng block sau (để orchestrator parse):
 ---RESULT---
 files: <file1>, <file2>, ...
 summary: <1-2 câu tóm tắt những gì đã làm>
+verified: <yes | no | manual-check-needed> — kết quả verify AC
+noticed: <optional — issues thấy nhưng không fix, hoặc "none">
 ---END---
 ```
 
@@ -127,6 +131,9 @@ date "+%Y-%m-%d %H:%M"
 {danh sách files, mỗi file 1 dòng bắt đầu bằng - }
 
 **Tóm tắt:** {summary từ agent}
+**AC verified:** {yes / no / manual-check-needed}
+{Nếu verified = no hoặc manual-check-needed, ghi rõ lý do}
+{Nếu agent có noticed issues ngoài scope, liệt kê ở đây để user biết}
 ```
 
 ## Bước 7 — Report tổng kết
@@ -151,12 +158,15 @@ Nếu có plan nào thất bại, hiển thị lỗi cụ thể và **không** m
 <agent-execution-rules>
 Các rules này apply cho subagent thực thi plan:
 
+- **Goal first** — đọc AC và Verification trước, execute sau. AC là thứ duy nhất cần đạt, không phải steps
 - **Đọc trước khi sửa** — luôn Read file trước khi Edit, dù plan đã có snippet
 - **Targeted edits** — dùng Edit với `old_string`/`new_string` chính xác thay vì Write cả file
-- **Không thêm ngoài scope** — không fix linting, không rename variable, không thêm comment
+- **Không thêm ngoài scope** — không fix linting, không rename variable, không thêm comment, không "improve while here"
+- **No side-quests** — nếu thấy bug/issue ngoài scope, ghi vào `noticed:` trong RESULT nhưng không fix
 - **Adapt nếu cần** — nếu line number trong plan lệch do file đã bị sửa trước đó,
   tìm đúng đoạn code bằng nội dung (không phải line number) và apply thay đổi
 - **Không hỏi** — plan đã đủ thông tin, execute trực tiếp không confirm thêm
+- **Verify trước khi báo done** — chạy verification steps trong plan (nếu có); nếu không verify được thì ghi `verified: manual-check-needed`
 - **Báo cáo chính xác** — chỉ list files thực sự đã thay đổi trong `---RESULT---`
 </agent-execution-rules>
 
