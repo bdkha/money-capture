@@ -76,6 +76,14 @@ export const translations = {
       addMoreAlertBody: 'Tính năng thêm danh mục sẽ sớm được cập nhật!',
       ok: 'OK',
     },
+    categories: {
+      cafe: 'Cafe',
+      food: 'Ăn uống',
+      shopping: 'Mua sắm',
+      transport: 'Đi lại',
+      entertainment: 'Vui chơi',
+      home: 'Nhà',
+    },
     mood: {
       label: 'Cảm xúc',
     },
@@ -164,6 +172,14 @@ export const translations = {
       addMoreAlertTitle: 'Coming soon',
       addMoreAlertBody: 'Custom categories will be available soon!',
       ok: 'OK',
+    },
+    categories: {
+      cafe: 'Cafe',
+      food: 'Food',
+      shopping: 'Shopping',
+      transport: 'Transport',
+      entertainment: 'Entertainment',
+      home: 'Home',
     },
     mood: {
       label: 'Mood',
