@@ -29,6 +29,7 @@ export const translations = {
       modeReceipt: 'Hoá đơn',
       modeQuick: 'Chụp nhanh',
       modeManual: 'Thủ công',
+      aiExtracting: 'Đang đọc hoá đơn...',
     },
     stats: {
       last14Days: '14 NGÀY GẦN NHẤT',
@@ -132,6 +133,7 @@ export const translations = {
       modeReceipt: 'Receipt',
       modeQuick: 'Quick',
       modeManual: 'Manual',
+      aiExtracting: 'Reading receipt...',
     },
     stats: {
       last14Days: 'LAST 14 DAYS',

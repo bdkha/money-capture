@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import GlassBottomNav from './GlassBottomNav';
+import { ExtractedReceiptData } from '../../modules/camera/utils/extractReceiptData';
 
 // Screen imports — implemented by parallel agents
 import CameraScreen from '../../modules/camera/screens/CameraScreen';
@@ -24,7 +25,7 @@ export type TabParamList = {
 
 export type RootStackParamList = {
   Tabs: undefined;
-  Preview: { tempUri: string };
+  Preview: { tempUri: string; extracted?: ExtractedReceiptData };
   Settings: undefined;
 };
 
