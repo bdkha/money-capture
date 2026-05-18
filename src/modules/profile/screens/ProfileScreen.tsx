@@ -19,7 +19,7 @@ const STUB_FRIENDS = [
   { id: '3', name: 'Linh', streak: 3 },
 ];
 
-const AVATAR_COLORS = ['#FF6B35', '#4A78C8', '#8854B0', '#2F8769', '#D86B2C'];
+const AVATAR_COLORS = ['#4E8C5C', '#4A78C8', '#8854B0', '#2F8769', '#D86B2C'];
 
 function avatarColor(name: string): string {
   return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];

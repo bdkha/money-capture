@@ -43,7 +43,7 @@ export default function ShutterButton({ onPress, disabled = false }: ShutterButt
     >
       <Animated.View style={[styles.outerRing, animatedStyle]}>
         <LinearGradient
-          colors={['#FF9A70', '#FF6B35']}
+          colors={['#7FB77E', '#4E8C5C']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.innerGradient}
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     height: 84,
     borderRadius: 42,
     borderWidth: 3,
-    borderColor: 'rgba(255,107,53,0.5)',
+    borderColor: 'rgba(78,140,92,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },
