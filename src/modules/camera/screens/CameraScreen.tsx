@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
   Platform,
   useWindowDimensions,
 } from "react-native";
@@ -30,6 +31,7 @@ import { useExpenses } from "../../expenses/hooks/useExpenses";
 import { formatVND } from "../../../shared/utils/currency";
 import { useI18n } from "../../../shared/i18n/I18nContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { extractReceiptData } from "../utils/extractReceiptData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,6 +57,7 @@ export default function CameraScreen() {
 
   const [facing, setFacing] = useState<CameraType>("back");
   const [capturing, setCapturing] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
   const [lastUri, setLastUri] = useState<string | null>(null);
   const [mode, setMode] = useState<CaptureMode>(t.camera.modeQuick);
@@ -109,12 +112,25 @@ export default function CameraScreen() {
         );
         await AsyncStorage.setItem(LAST_CAPTURE_KEY, cropped.uri);
         setLastUri(cropped.uri);
-        navigation.navigate("Preview", { tempUri: cropped.uri });
+
+        // Run OCR extraction only in Receipt mode
+        let extracted = undefined;
+        if (mode === t.camera.modeReceipt) {
+          setCapturing(false);
+          setExtracting(true);
+          try {
+            extracted = await extractReceiptData(cropped.uri) ?? undefined;
+          } finally {
+            setExtracting(false);
+          }
+        }
+
+        navigation.navigate("Preview", { tempUri: cropped.uri, extracted });
       }
     } finally {
       setCapturing(false);
     }
-  }, [capturing, navigation]);
+  }, [capturing, navigation, mode, t.camera.modeReceipt]);
 
   const toggleFacing = useCallback(() => {
     setFacing((f) => (f === "back" ? "front" : "back"));
@@ -174,6 +190,14 @@ export default function CameraScreen() {
         style={styles.vignetteBottom}
         pointerEvents="none"
       />
+
+      {/* OCR extraction loading overlay */}
+      {extracting && (
+        <View style={styles.extractingOverlay}>
+          <ActivityIndicator size="large" color={Colors.orange} />
+          <Text style={styles.extractingText}>{t.camera.aiExtracting}</Text>
+        </View>
+      )}
 
       {/* 1:1 frame overlays */}
       <View
@@ -449,4 +473,20 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.55)",
     pointerEvents: "none",
   } as any,
+
+  // ── OCR extracting overlay ───────────────────────────────────────────────────
+  extractingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.72)",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.md,
+    zIndex: 20,
+  },
+  extractingText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontFamily: FontNames.bodyMed,
+    letterSpacing: 0.3,
+  },
 });

@@ -138,16 +138,16 @@ function makeStyles(c: ColorTokens, isDark: boolean) {
 export default function PreviewScreen() {
   const navigation = useNavigation();
   const route = useRoute<PreviewRoute>();
-  const { tempUri } = route.params;
+  const { tempUri, extracted } = route.params;
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const { isDark } = useTheme();
   const { t } = useI18n();
   const styles = useMemo(() => makeStyles(colors, isDark), [colors, isDark]);
 
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [category, setCategory] = useState<Category>('Cafe');
+  const [amount, setAmount] = useState(extracted?.amount ?? '');
+  const [note, setNote] = useState(extracted?.note ?? '');
+  const [category, setCategory] = useState<Category>(extracted?.category ?? 'Cafe');
   const [mood, setMood] = useState<Mood | undefined>(undefined);
   const [saving, setSaving] = useState(false);
 
@@ -232,10 +232,14 @@ export default function PreviewScreen() {
           <Ionicons name="close" size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
-        {/* AI pill */}
-        <View style={styles.aiPill}>
-          <Text style={styles.aiPillText}>{t.preview.aiDone}</Text>
-        </View>
+        {/* AI pill — only show when extraction succeeded */}
+        {extracted ? (
+          <View style={styles.aiPill}>
+            <Text style={styles.aiPillText}>{t.preview.aiDone}</Text>
+          </View>
+        ) : (
+          <View />
+        )}
 
         {/* Retake button */}
         <TouchableOpacity
