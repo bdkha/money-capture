@@ -213,6 +213,7 @@ export default function CameraScreen() {
         style={StyleSheet.absoluteFill}
         facing={facing}
         flash={flashMode}
+        animateShutter={false}
       />
 
       {/* Vignette — top */}
