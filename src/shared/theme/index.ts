@@ -2,21 +2,21 @@ import { Category } from '../types';
 
 export const Colors = {
   // Page & surface
-  ink0: '#FBF6EE',
-  ink1: '#F3EDE3',
-  ink2: '#E8DFD2',
-  ink3: '#D4C9B8',
-  ink4: '#B8A898',
+  ink0: '#EEF4F9',
+  ink1: '#E0EAF2',
+  ink2: '#D0D8E0',
+  ink3: '#C8D5DF',
+  ink4: '#A5B0BA',
 
   // Text
-  inkTextPrimary: '#1A1208',
-  inkTextSecondary: '#7A6A58',
-  inkTextTertiary: '#A89880',
+  inkTextPrimary: '#14202A',
+  inkTextSecondary: '#5C6A75',
+  inkTextTertiary: '#A5B0BA',
 
   // Accent
-  orange: '#FF6B35',
-  orangeMuted: '#FF9A70',
-  orangeDeep: '#E8521A',
+  orange: '#4E83B5',
+  orangeMuted: '#7FB2DB',
+  orangeDeep: '#2F5F8C',
 
   // Status
   success: '#2F8769',
@@ -27,12 +27,12 @@ export const Colors = {
   camGlass: 'rgba(255,255,255,0.10)',
 
   // Budget hero gradient
-  budgetHeroStart: '#1A1410',
-  budgetHeroEnd: '#2A2018',
+  budgetHeroStart: '#0D1420',
+  budgetHeroEnd: '#162840',
 
   // Streak gradient
-  streakStart: '#FF6B35',
-  streakEnd: '#E8521A',
+  streakStart: '#AFD4F0',
+  streakEnd: '#2F5F8C',
 };
 
 export const CATEGORY_META: Record<Category, { color: string; emoji: string }> = {
