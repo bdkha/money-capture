@@ -1,28 +1,36 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   Image,
   Platform,
-} from 'react-native';
-import { CameraView, CameraType, FlashMode, useCameraPermissions } from 'expo-camera';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { format } from 'date-fns';
+  useWindowDimensions,
+} from "react-native";
+import {
+  CameraView,
+  CameraType,
+  FlashMode,
+  useCameraPermissions,
+} from "expo-camera";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { format } from "date-fns";
 
-import ShutterButton from '../components/ShutterButton';
-import { Colors, Spacing, Radii, FontNames } from '../../../shared/theme';
-import { RootStackParamList } from '../../../shared/navigation/RootNavigator';
-import { useExpenses } from '../../expenses/hooks/useExpenses';
-import { formatVND } from '../../../shared/utils/currency';
-import { useI18n } from '../../../shared/i18n/I18nContext';
+import ShutterButton from "../components/ShutterButton";
+import { Colors, Spacing, Radii, FontNames } from "../../../shared/theme";
+import { RootStackParamList } from "../../../shared/navigation/RootNavigator";
+import { useExpenses } from "../../expenses/hooks/useExpenses";
+import { formatVND } from "../../../shared/utils/currency";
+import { useI18n } from "../../../shared/i18n/I18nContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,203 +38,63 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 type CaptureMode = string;
 
-const LAST_CAPTURE_KEY = '@chopp:last_capture';
-
-// Streak is hard-coded for now until a streak module is wired up
-const STREAK_DAYS = 3;
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-// Camera screen is always dark — use static Colors for camera-specific colors
-const styles = StyleSheet.create({
-  // ── Containers ──────────────────────────────────────────────────────────────
-  container: {
-    flex: 1,
-    backgroundColor: Colors.camBg,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: Colors.camBg,
-  },
-
-  // ── Permission denied ────────────────────────────────────────────────────────
-  permissionContainer: {
-    flex: 1,
-    backgroundColor: Colors.camBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.md,
-  },
-  permissionTitle: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontFamily: FontNames.title,
-    textAlign: 'center',
-    marginTop: Spacing.md,
-  },
-  permissionBody: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 15,
-    fontFamily: FontNames.body,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  permissionButton: {
-    backgroundColor: Colors.orange,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Radii.full,
-    marginTop: Spacing.md,
-  },
-  permissionButtonText: {
-    color: '#FFFFFF',
-    fontFamily: FontNames.bodySemi,
-    fontSize: 16,
-  },
-
-  // ── Vignettes ────────────────────────────────────────────────────────────────
-  vignetteTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    pointerEvents: 'none',
-  } as any,
-  vignetteBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-    pointerEvents: 'none',
-  } as any,
-
-  // ── Top overlay ──────────────────────────────────────────────────────────────
-  topOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
-    gap: Spacing.sm,
-  },
-
-  // ── Glass pills ──────────────────────────────────────────────────────────────
-  glassPill: {
-    backgroundColor: 'rgba(20,14,10,0.55)',
-    borderRadius: Radii.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  pillText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontFamily: FontNames.bodyMed,
-  },
-  flashButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Radii.full,
-    backgroundColor: 'rgba(20,14,10,0.45)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // ── Bottom overlay ───────────────────────────────────────────────────────────
-  bottomOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-
-  // ── Mode tabs ────────────────────────────────────────────────────────────────
-  modeTabRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  modeTabText: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 14,
-    fontFamily: FontNames.bodyMed,
-    letterSpacing: 0.3,
-  },
-  modeTabActive: {
-    color: '#FFFFFF',
-    fontFamily: FontNames.bodySemi,
-    textShadowColor: Colors.orange,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-
-  // ── Shutter row ──────────────────────────────────────────────────────────────
-  shutterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Platform.OS === 'android' ? Spacing.xl : Spacing.lg,
-    paddingTop: Spacing.sm,
-  },
-
-  // ── Thumbnail ────────────────────────────────────────────────────────────────
-  thumbnailSlot: {
-    width: 52,
-    height: 52,
-    borderRadius: Radii.md,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-  },
-  thumbnailEmpty: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-
-  // ── Flip button ──────────────────────────────────────────────────────────────
-  flipButton: {
-    width: 52,
-    height: 52,
-    borderRadius: Radii.full,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-});
+const LAST_CAPTURE_KEY = "@chopp:last_capture";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+function CornerBrackets({ top, height }: { top: number; height: number }) {
+  const L = 24;
+  const T = 3;
+  const C = 'rgba(255,255,255,0.85)';
+  const arm = (w: number, h: number) => ({ width: w, height: h, backgroundColor: C } as const);
+  return (
+    <View style={{ position: 'absolute', top, left: 0, right: 0, height }} pointerEvents="none">
+      {/* Top-left */}
+      <View style={{ position: 'absolute', top: 0, left: 0 }}>
+        <View style={arm(L, T)} />
+        <View style={[arm(T, L), { marginTop: -T }]} />
+      </View>
+      {/* Top-right */}
+      <View style={{ position: 'absolute', top: 0, right: 0, alignItems: 'flex-end' }}>
+        <View style={arm(L, T)} />
+        <View style={[arm(T, L), { marginTop: -T }]} />
+      </View>
+      {/* Bottom-left */}
+      <View style={{ position: 'absolute', bottom: 0, left: 0 }}>
+        <View style={[arm(T, L), { marginBottom: -T }]} />
+        <View style={arm(L, T)} />
+      </View>
+      {/* Bottom-right */}
+      <View style={{ position: 'absolute', bottom: 0, right: 0, alignItems: 'flex-end' }}>
+        <View style={[arm(T, L), { marginBottom: -T }]} />
+        <View style={arm(L, T)} />
+      </View>
+    </View>
+  );
+}
+
 export default function CameraScreen() {
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
-  const MODES: CaptureMode[] = [t.camera.modeReceipt, t.camera.modeQuick, t.camera.modeManual];
+  const MODES: CaptureMode[] = [
+    t.camera.modeReceipt,
+    t.camera.modeQuick,
+    t.camera.modeManual,
+  ];
 
-  const [facing, setFacing] = useState<CameraType>('back');
+  const [facing, setFacing] = useState<CameraType>("back");
   const [capturing, setCapturing] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
   const [lastUri, setLastUri] = useState<string | null>(null);
-  const [mode, setMode] = useState<CaptureMode>(t.camera.modeReceipt);
+  const [mode, setMode] = useState<CaptureMode>(t.camera.modeQuick);
+
+  const isReceiptMode = mode === t.camera.modeReceipt;
+  const frameHeight = isReceiptMode
+    ? Math.min(Math.round(screenWidth * (4 / 3)), Math.round(screenHeight * 0.75))
+    : screenWidth;
+  const frameOverlayHeight = Math.max(0, (screenHeight - frameHeight) / 2);
 
   const cameraRef = useRef<CameraView>(null);
   const navigation = useNavigation<Nav>();
@@ -246,7 +114,7 @@ export default function CameraScreen() {
   }, []);
 
   // ── Derived: today's total spend ───────────────────────────────────────────
-  const todayKey = format(new Date(), 'yyyy-MM-dd');
+  const todayKey = format(new Date(), "yyyy-MM-dd");
   const todaySpend = expenses
     .filter((e) => e.date === todayKey)
     .reduce((sum, e) => sum + e.amount, 0);
@@ -261,18 +129,49 @@ export default function CameraScreen() {
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
       if (photo?.uri) {
-        // Persist thumbnail for next session
-        await AsyncStorage.setItem(LAST_CAPTURE_KEY, photo.uri);
-        setLastUri(photo.uri);
-        navigation.navigate('Preview', { tempUri: photo.uri });
+        let cropW: number, cropH: number, originX: number, originY: number;
+        if (isReceiptMode) {
+          cropW = photo.width;
+          cropH = Math.min(photo.height, Math.round(photo.width * (4 / 3)));
+          originX = 0;
+          originY = Math.max(0, Math.round((photo.height - cropH) / 2));
+        } else {
+          const size = Math.min(photo.width, photo.height);
+          cropW = size;
+          cropH = size;
+          originX = Math.round((photo.width - size) / 2);
+          originY = Math.round((photo.height - size) / 2);
+        }
+        const cropped = await ImageManipulator.manipulateAsync(
+          photo.uri,
+          [{ crop: { originX, originY, width: cropW, height: cropH } }],
+          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+        );
+        await AsyncStorage.setItem(LAST_CAPTURE_KEY, cropped.uri);
+        setLastUri(cropped.uri);
+        navigation.navigate("Preview", { tempUri: cropped.uri });
       }
     } finally {
       setCapturing(false);
     }
-  }, [capturing, navigation]);
+  }, [capturing, navigation, isReceiptMode]);
+
+  const handlePickFromGallery = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: false,
+    });
+    if (!result.canceled && result.assets[0]?.uri) {
+      const uri = result.assets[0].uri;
+      await AsyncStorage.setItem(LAST_CAPTURE_KEY, uri);
+      setLastUri(uri);
+      navigation.navigate("Preview", { tempUri: uri });
+    }
+  }, [navigation]);
 
   const toggleFacing = useCallback(() => {
-    setFacing((f) => (f === 'back' ? 'front' : 'back'));
+    setFacing((f) => (f === "back" ? "front" : "back"));
   }, []);
 
   // ── Permission loading ─────────────────────────────────────────────────────
@@ -284,12 +183,19 @@ export default function CameraScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Ionicons name="camera-outline" size={64} color={Colors.inkTextSecondary} />
+        <Ionicons
+          name="camera-outline"
+          size={64}
+          color={Colors.inkTextSecondary}
+        />
         <Text style={styles.permissionTitle}>Cần quyền camera</Text>
         <Text style={styles.permissionBody}>
-          Chộp cần truy cập máy ảnh để chụp hoá đơn và chi tiêu của bạn.
+          Chụp cần truy cập máy ảnh để chụp hoá đơn và chi tiêu của bạn.
         </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestPermission}
+        >
           <Text style={styles.permissionButtonText}>Cho phép</Text>
         </TouchableOpacity>
       </View>
@@ -297,7 +203,7 @@ export default function CameraScreen() {
   }
 
   // ── Main camera UI ─────────────────────────────────────────────────────────
-  const flashMode: FlashMode = flashOn ? 'on' : 'off';
+  const flashMode: FlashMode = flashOn ? "on" : "off";
 
   return (
     <View style={styles.container}>
@@ -311,29 +217,38 @@ export default function CameraScreen() {
 
       {/* Vignette — top */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.6)', 'transparent']}
+        colors={["rgba(0,0,0,0.6)", "transparent"]}
         style={styles.vignetteTop}
         pointerEvents="none"
       />
 
       {/* Vignette — bottom */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.75)']}
+        colors={["transparent", "rgba(0,0,0,0.75)"]}
         style={styles.vignetteBottom}
         pointerEvents="none"
       />
 
+      {/* Viewfinder corner brackets */}
+      <CornerBrackets top={frameOverlayHeight} height={frameHeight} />
+
       {/* ── Top overlay ──────────────────────────────────────────────────── */}
-      <SafeAreaView style={styles.topOverlay}>
+      <View style={[styles.topOverlay, { paddingTop: insets.top }]}>
         <View style={styles.topRow}>
-          {/* Streak pill */}
-          <View style={styles.glassPill}>
-            <Text style={styles.pillText}>🔥 {STREAK_DAYS} {t.feed.streakDays}</Text>
-          </View>
+          {/* Close button */}
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.flashButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close" size={22} color="#FFF" />
+          </TouchableOpacity>
 
           {/* Today's spend pill */}
           <View style={styles.glassPill}>
-            <Text style={styles.pillText}>{t.feed.today}: {formatVND(todaySpend)}</Text>
+            <Text style={styles.pillText}>
+              {t.feed.today}: {formatVND(todaySpend)}
+            </Text>
           </View>
 
           {/* Flash toggle */}
@@ -343,16 +258,16 @@ export default function CameraScreen() {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons
-              name={flashOn ? 'flash' : 'flash-off'}
+              name={flashOn ? "flash" : "flash-off"}
               size={22}
               color="#FFF"
             />
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
 
       {/* ── Bottom overlay ───────────────────────────────────────────────── */}
-      <SafeAreaView style={styles.bottomOverlay}>
+      <View style={[styles.bottomOverlay, { paddingBottom: insets.bottom }]}>
         {/* Mode selector tabs */}
         <View style={styles.modeTabRow}>
           {MODES.map((m) => (
@@ -362,10 +277,7 @@ export default function CameraScreen() {
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Text
-                style={[
-                  styles.modeTabText,
-                  mode === m && styles.modeTabActive,
-                ]}
+                style={[styles.modeTabText, mode === m && styles.modeTabActive]}
               >
                 {m}
               </Text>
@@ -376,10 +288,7 @@ export default function CameraScreen() {
         {/* Shutter row */}
         <View style={styles.shutterRow}>
           {/* Last capture thumbnail */}
-          <TouchableOpacity
-            style={styles.thumbnailSlot}
-            activeOpacity={0.75}
-          >
+          <TouchableOpacity style={styles.thumbnailSlot} activeOpacity={0.75} onPress={handlePickFromGallery}>
             {lastUri ? (
               <Image source={{ uri: lastUri }} style={styles.thumbnail} />
             ) : (
@@ -398,7 +307,188 @@ export default function CameraScreen() {
             <Ionicons name="camera-reverse-outline" size={28} color="#FFF" />
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+// Camera screen is always dark — use static Colors for camera-specific colors
+const styles = StyleSheet.create({
+  // ── Containers ──────────────────────────────────────────────────────────────
+  container: {
+    flex: 1,
+    backgroundColor: Colors.camBg,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: Colors.camBg,
+  },
+
+  // ── Permission denied ────────────────────────────────────────────────────────
+  permissionContainer: {
+    flex: 1,
+    backgroundColor: Colors.camBg,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.xl,
+    gap: Spacing.md,
+  },
+  permissionTitle: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontFamily: FontNames.title,
+    textAlign: "center",
+    marginTop: Spacing.md,
+  },
+  permissionBody: {
+    color: "rgba(255,255,255,0.65)",
+    fontSize: 15,
+    fontFamily: FontNames.body,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  permissionButton: {
+    backgroundColor: Colors.orange,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: Radii.full,
+    marginTop: Spacing.md,
+  },
+  permissionButtonText: {
+    color: "#FFFFFF",
+    fontFamily: FontNames.bodySemi,
+    fontSize: 16,
+  },
+
+  // ── Vignettes ────────────────────────────────────────────────────────────────
+  vignetteTop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    pointerEvents: "none",
+  } as any,
+  vignetteBottom: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    pointerEvents: "none",
+  } as any,
+
+  // ── Top overlay ──────────────────────────────────────────────────────────────
+  topOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
+    gap: Spacing.sm,
+  },
+
+  // ── Glass pills ──────────────────────────────────────────────────────────────
+  glassPill: {
+    backgroundColor: "rgba(20,14,10,0.55)",
+    borderRadius: Radii.full,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  pillText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontFamily: FontNames.bodyMed,
+  },
+  flashButton: {
+    width: 36,
+    height: 36,
+    borderRadius: Radii.full,
+    backgroundColor: "rgba(20,14,10,0.45)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // ── Bottom overlay ───────────────────────────────────────────────────────────
+  bottomOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+
+  // ── Mode tabs ────────────────────────────────────────────────────────────────
+  modeTabRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+  modeTabText: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 14,
+    fontFamily: FontNames.bodyMed,
+    letterSpacing: 0.3,
+  },
+  modeTabActive: {
+    color: "#FFFFFF",
+    fontFamily: FontNames.bodySemi,
+    textShadowColor: Colors.orange,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+
+  // ── Shutter row ──────────────────────────────────────────────────────────────
+  shutterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Platform.OS === "android" ? Spacing.xl : Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+
+  // ── Thumbnail ────────────────────────────────────────────────────────────────
+  thumbnailSlot: {
+    width: 52,
+    height: 52,
+    borderRadius: Radii.md,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
+  },
+  thumbnailEmpty: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+
+  // ── Flip button ──────────────────────────────────────────────────────────────
+  flipButton: {
+    width: 52,
+    height: 52,
+    borderRadius: Radii.full,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+
+});

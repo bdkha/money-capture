@@ -59,42 +59,42 @@ export default function TrendCard({
 
   return (
     <View style={styles.container}>
-      {/* Month navigation row */}
-      <View style={styles.monthRow}>
-        <TouchableOpacity
-          onPress={onPrev}
-          style={styles.arrowButton}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.inkTextPrimary} />
-        </TouchableOpacity>
+      <View style={styles.headerRow}>
+        {/* Left: nav group */}
+        <View style={styles.navGroup}>
+          <TouchableOpacity
+            onPress={onPrev}
+            style={styles.arrowButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-back" size={22} color={colors.inkTextPrimary} />
+          </TouchableOpacity>
 
-        <Text style={styles.monthLabel}>{monthLabel}</Text>
+          <Text style={styles.monthLabel}>{monthLabel}</Text>
 
-        <TouchableOpacity
-          onPress={onNext}
-          style={[styles.arrowButton, isCurrentMonth && styles.arrowDisabled]}
-          disabled={isCurrentMonth}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons
-            name="chevron-forward"
-            size={22}
-            color={isCurrentMonth ? colors.ink3 : colors.inkTextPrimary}
-          />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={onNext}
+            style={[styles.arrowButton, isCurrentMonth && styles.arrowDisabled]}
+            disabled={isCurrentMonth}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name="chevron-forward"
+              size={22}
+              color={isCurrentMonth ? colors.ink3 : colors.inkTextPrimary}
+            />
+          </TouchableOpacity>
+        </View>
 
-      {/* Trend pill */}
-      {showPill && pillBg !== null && (
-        <View style={styles.pillRow}>
+        {/* Right: trend pill */}
+        {showPill && pillBg !== null && (
           <View style={[styles.pill, { backgroundColor: pillBg }]}>
             <Text style={[styles.pillText, { color: pillTextColor }]}>
               {pillText}
             </Text>
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 }
@@ -104,10 +104,15 @@ function makeStyles(c: ColorTokens) {
     container: {
       paddingHorizontal: Spacing.lg,
     },
-    monthRow: {
+    headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+    },
+    navGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
     },
     arrowButton: {
       padding: Spacing.xs,
@@ -119,12 +124,6 @@ function makeStyles(c: ColorTokens) {
       fontFamily: FontNames.title,
       fontSize: 17,
       color: c.inkTextPrimary,
-      flex: 1,
-      textAlign: 'center',
-    },
-    pillRow: {
-      alignItems: 'center',
-      marginTop: Spacing.sm,
     },
     pill: {
       borderRadius: Radii.full,

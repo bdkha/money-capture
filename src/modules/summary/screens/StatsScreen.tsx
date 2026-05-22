@@ -6,14 +6,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { format, subMonths, addMonths, parseISO, getDaysInMonth } from 'date-fns';
+import { format, subMonths, addMonths, parseISO } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
 import { useExpenses } from '../../expenses/hooks/useExpenses';
 import { useMonthlySummary } from '../hooks/useMonthlySummary';
 import DonutChart from '../components/DonutChart';
 import DailyBarChart from '../components/DailyBarChart';
 import TrendCard from '../components/TrendCard';
-import { Spacing, CATEGORY_META, FontNames, Radii } from '../../../shared/theme';
+import { Spacing, CATEGORY_META, FontNames } from '../../../shared/theme';
 import { CATEGORIES, Category } from '../../../shared/types';
 import { formatVND } from '../../../shared/utils/currency';
 import { useColors, ColorTokens } from '../../../shared/theme/ThemeContext';
@@ -41,6 +41,20 @@ export default function StatsScreen() {
   );
   const prevSummary = useMonthlySummary(expenses, prevMonthStr);
 
+  const topCategories = useMemo(() => {
+    return CATEGORIES
+      .map((cat) => ({
+        cat,
+        amount: summary.byCategory[cat] ?? 0,
+        pct: summary.totalCents > 0
+          ? Math.round(((summary.byCategory[cat] ?? 0) / summary.totalCents) * 100)
+          : 0,
+      }))
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 3);
+  }, [summary]);
+
   const isCurrentMonth = currentMonth === format(new Date(), 'yyyy-MM');
 
   const goPrev = () => {
@@ -56,13 +70,6 @@ export default function StatsScreen() {
       setCurrentMonth(format(next, 'yyyy-MM'));
     }
   };
-
-  // Average spend per day for current month
-  const daysInMonth = getDaysInMonth(parseISO(currentMonth + '-01'));
-  const avgPerDay =
-    summary.totalCents > 0
-      ? formatVND(Math.round(summary.totalCents / daysInMonth))
-      : '0đ';
 
   return (
     <ScrollView
@@ -86,20 +93,28 @@ export default function StatsScreen() {
         currentMonthTotal={summary.totalCents}
       />
 
-      {/* 2. Donut chart centered */}
-      <View style={styles.donutSection}>
+      {/* 2. Donut chart + top categories card */}
+      <View style={styles.donutCard}>
         <DonutChart summary={summary} />
-        <Text style={styles.avgDayLabel}>{avgPerDay + t.stats.perDay}</Text>
+        <View style={styles.legendSection}>
+          <Text style={styles.legendTitle}>{t.stats.topCategories}</Text>
+          {topCategories.map(({ cat, pct }) => (
+            <View key={cat} style={styles.legendRow}>
+              <View style={[styles.legendDot, { backgroundColor: CATEGORY_META[cat].color }]} />
+              <Text style={styles.legendCatName}>{CATEGORY_META[cat].emoji} {cat}</Text>
+              <Text style={styles.legendPct}>{pct}%</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       {/* 3. Daily bar chart - 14 days */}
-      <Text style={styles.sectionLabel}>{t.stats.last14Days}</Text>
       <DailyBarChart expenses={expenses} />
 
       {/* 4. Category breakdown */}
       <Text style={styles.sectionLabel}>{t.stats.byCategory}</Text>
-      <View style={styles.categoryList}>
-        {CATEGORIES.map((cat) => {
+      <View style={styles.categoryCard}>
+        {CATEGORIES.map((cat, index) => {
           const amount = summary.byCategory[cat] ?? 0;
           const pct =
             summary.totalCents > 0
@@ -111,6 +126,7 @@ export default function StatsScreen() {
               cat={cat}
               amount={amount}
               pct={pct}
+              isLast={index === CATEGORIES.length - 1}
             />
           );
         })}
@@ -123,45 +139,32 @@ interface CategoryRowProps {
   cat: Category;
   amount: number;
   pct: number;
+  isLast?: boolean;
 }
 
-function CategoryRow({ cat, amount, pct }: CategoryRowProps) {
+function CategoryRow({ cat, amount, pct, isLast }: CategoryRowProps) {
   const colors = useColors();
+  const { t } = useI18n();
   const catStyles = useMemo(() => makeCatStyles(colors), [colors]);
   const meta = CATEGORY_META[cat];
 
   return (
-    <View style={catStyles.row}>
-      {/* Emoji circle */}
-      <View
-        style={[
-          catStyles.emojiCircle,
-          { backgroundColor: meta.color + '22' },
-        ]}
-      >
+    <View style={[catStyles.row, !isLast && catStyles.rowBorder]}>
+      {/* Emoji rounded square */}
+      <View style={[catStyles.emojiBox, { backgroundColor: meta.color + '22' }]}>
         <Text style={catStyles.emoji}>{meta.emoji}</Text>
       </View>
 
-      {/* Label + amount */}
+      {/* Name + pct */}
       <View style={catStyles.textGroup}>
         <Text style={catStyles.catName}>{cat}</Text>
-        {amount > 0 && (
-          <Text style={catStyles.catAmount}>{formatVND(amount)}</Text>
-        )}
+        <Text style={catStyles.catPct}>{pct}% {t.stats.ofTotal}</Text>
       </View>
 
-      {/* Mini progress bar */}
-      <View style={catStyles.barTrack}>
-        <View
-          style={[
-            catStyles.barFill,
-            {
-              width: `${pct}%` as `${number}%`,
-              backgroundColor: meta.color,
-            },
-          ]}
-        />
-      </View>
+      {/* Amount */}
+      {amount > 0 && (
+        <Text style={catStyles.catAmount}>{formatVND(amount)}</Text>
+      )}
     </View>
   );
 }
@@ -175,16 +178,50 @@ function makeStyles(c: ColorTokens) {
     content: {
       gap: Spacing.sm,
     },
-    donutSection: {
+    donutCard: {
+      flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: Spacing.md,
+      backgroundColor: c.cardBg,
+      borderRadius: 20,
+      marginHorizontal: Spacing.lg,
+      padding: 20,
+      shadowColor: '#281910',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.18,
+      shadowRadius: 24,
+      elevation: 8,
     },
-    avgDayLabel: {
+    legendSection: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    legendTitle: {
       fontFamily: FontNames.body,
+      fontSize: 12,
+      color: c.inkTextSecondary,
+      marginBottom: 6,
+    },
+    legendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 5,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 2,
+    },
+    legendCatName: {
+      flex: 1,
+      fontFamily: FontNames.bodySemi,
+      fontSize: 14,
+      color: c.inkTextPrimary,
+    },
+    legendPct: {
+      fontFamily: FontNames.amountReg,
       fontSize: 13,
       color: c.inkTextSecondary,
-      marginTop: Spacing.sm,
-      textAlign: 'center',
     },
     sectionLabel: {
       fontFamily: FontNames.bodySemi,
@@ -196,9 +233,17 @@ function makeStyles(c: ColorTokens) {
       marginTop: Spacing.lg,
       marginBottom: Spacing.sm,
     },
-    categoryList: {
-      paddingHorizontal: Spacing.lg,
-      gap: Spacing.md,
+    categoryCard: {
+      backgroundColor: c.cardBg,
+      borderRadius: 20,
+      marginHorizontal: Spacing.lg,
+      paddingHorizontal: 4,
+      paddingTop: 6,
+      shadowColor: '#281910',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.18,
+      shadowRadius: 24,
+      elevation: 8,
     },
   });
 }
@@ -208,12 +253,18 @@ function makeCatStyles(c: ColorTokens) {
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Spacing.sm,
+      gap: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
     },
-    emojiCircle: {
+    rowBorder: {
+      borderBottomWidth: 0.8,
+      borderBottomColor: c.ink2,
+    },
+    emojiBox: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -221,7 +272,7 @@ function makeCatStyles(c: ColorTokens) {
       fontSize: 18,
     },
     textGroup: {
-      width: 100,
+      flex: 1,
       gap: 1,
     },
     catName: {
@@ -229,21 +280,15 @@ function makeCatStyles(c: ColorTokens) {
       fontSize: 14,
       color: c.inkTextPrimary,
     },
+    catPct: {
+      fontFamily: FontNames.amountReg,
+      fontSize: 12,
+      color: c.inkTextSecondary,
+    },
     catAmount: {
-      fontFamily: FontNames.amountMed,
-      fontSize: 14,
-      color: c.orange,
-    },
-    barTrack: {
-      flex: 1,
-      height: 4,
-      borderRadius: Radii.sm,
-      backgroundColor: c.ink2,
-      overflow: 'hidden',
-    },
-    barFill: {
-      height: 4,
-      borderRadius: Radii.sm,
+      fontFamily: FontNames.bodySemi,
+      fontSize: 15,
+      color: c.inkTextPrimary,
     },
   });
 }

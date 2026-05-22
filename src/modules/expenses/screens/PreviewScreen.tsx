@@ -77,10 +77,6 @@ function makeStyles(c: ColorTokens, isDark: boolean) {
       color: '#FFFFFF',
     },
     glassCard: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
       backgroundColor: isDark ? 'rgba(30,26,16,0.97)' : 'rgba(251,246,238,0.96)',
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
@@ -247,44 +243,53 @@ export default function PreviewScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Spacer — pushes card to bottom in normal flow */}
+      <View style={{ flex: 1 }} />
+
       {/* Animated glass card */}
-      <Animated.View style={[styles.glassCard, { paddingBottom: insets.bottom + 16 }, animatedCardStyle]}>
+      <Animated.View style={[styles.glassCard, animatedCardStyle]}>
         {/* Drag handle */}
         <View style={styles.dragHandle} />
 
-        {/* Amount input */}
-        <AmountInput value={amount} onChange={setAmount} />
-
-        {/* Merchant / note input */}
-        <TextInput
-          style={styles.noteInput}
-          placeholder={t.preview.merchantPlaceholder}
-          placeholderTextColor={colors.inkTextSecondary}
-          value={note}
-          onChangeText={setNote}
-          returnKeyType="done"
-        />
-
-        {/* Category label + picker */}
-        <Text style={styles.sectionLabel}>{t.preview.categoryLabel}</Text>
-        <CategoryPicker selected={category} onChange={setCategory} />
-
-        {/* Mood picker (includes its own label) */}
-        <MoodPicker selected={mood} onChange={setMood} />
-
-        {/* Save button */}
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            !canSave && styles.saveButtonDisabled,
-          ]}
-          onPress={handleSave}
-          disabled={!canSave}
-          activeOpacity={0.8}
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
         >
-          <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-          <Text style={styles.saveButtonText}>{t.preview.save}</Text>
-        </TouchableOpacity>
+          {/* Amount input */}
+          <AmountInput value={amount} onChange={setAmount} />
+
+          {/* Merchant / note input */}
+          <TextInput
+            style={styles.noteInput}
+            placeholder={t.preview.merchantPlaceholder}
+            placeholderTextColor={colors.inkTextSecondary}
+            value={note}
+            onChangeText={setNote}
+            returnKeyType="done"
+          />
+
+          {/* Category label + picker */}
+          <Text style={styles.sectionLabel}>{t.preview.categoryLabel}</Text>
+          <CategoryPicker selected={category} onChange={setCategory} />
+
+          {/* Mood picker (includes its own label) */}
+          <MoodPicker selected={mood} onChange={setMood} />
+
+          {/* Save button */}
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              !canSave && styles.saveButtonDisabled,
+            ]}
+            onPress={handleSave}
+            disabled={!canSave}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+            <Text style={styles.saveButtonText}>{t.preview.save}</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </Animated.View>
     </KeyboardAvoidingView>
   );

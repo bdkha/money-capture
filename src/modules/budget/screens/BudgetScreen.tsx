@@ -52,7 +52,10 @@ export default function BudgetScreen() {
     [expenses],
   );
 
-  const totalCap = budget?.totalCapCents ?? 3_000_000;
+  const totalCap = useMemo(
+    () => budget?.categories.reduce((sum, c) => sum + c.capCents, 0) ?? 3_000_000,
+    [budget],
+  );
 
   return (
     <ScrollView
@@ -82,23 +85,19 @@ export default function BudgetScreen() {
       </Text>
 
       {/* Category rows card */}
-      <View style={styles.categoryCard}>
-        {CATEGORIES.map((cat, index) => {
+      <View style={styles.categoryList}>
+        {CATEGORIES.map((cat) => {
           const catBudget = budget?.categories.find((c: { category: Category }) => c.category === cat);
           const capCents = catBudget?.capCents ?? 500_000;
           const spentCents = spentByCategory[cat] ?? 0;
           return (
-            <View
+            <CategoryBudgetRow
               key={cat}
-              style={index === CATEGORIES.length - 1 ? styles.lastRow : undefined}
-            >
-              <CategoryBudgetRow
-                category={cat}
-                spentCents={spentCents}
-                capCents={capCents}
-                onUpdateCap={(newCap) => updateCap(cat, newCap)}
-              />
-            </View>
+              category={cat}
+              spentCents={spentCents}
+              capCents={capCents}
+              onUpdateCap={(newCap) => updateCap(cat, newCap)}
+            />
           );
         })}
       </View>
@@ -118,6 +117,9 @@ function makeStyles(c: ColorTokens) {
     header: {
       paddingHorizontal: Spacing.lg,
       marginBottom: Spacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
     },
     title: {
       fontFamily: FontNames.title,
@@ -139,16 +141,9 @@ function makeStyles(c: ColorTokens) {
       paddingHorizontal: Spacing.lg,
       marginBottom: Spacing.sm,
     },
-    categoryCard: {
-      backgroundColor: c.cardBg,
-      borderRadius: 16,
-      marginHorizontal: Spacing.lg,
-      borderWidth: 1,
-      borderColor: c.ink2,
-      overflow: 'hidden',
-    },
-    lastRow: {
-      overflow: 'hidden',
+    categoryList: {
+      paddingHorizontal: Spacing.lg,
+      gap: Spacing.sm,
     },
   });
 }

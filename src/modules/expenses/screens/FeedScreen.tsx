@@ -14,6 +14,7 @@ import { isToday, isYesterday, format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { useFocusEffect } from '@react-navigation/native';
 import { useExpenses } from '../hooks/useExpenses';
+import { useStreak } from '../../profile/hooks/useStreak';
 import FeedCard from '../components/FeedCard';
 import { Expense } from '../../../shared/types';
 import { Spacing, Radii, FontNames } from '../../../shared/theme';
@@ -109,6 +110,7 @@ export default function FeedScreen() {
   const { t } = useI18n();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { expenses, loading, refresh, remove } = useExpenses();
+  const { currentStreak } = useStreak(expenses);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -172,7 +174,7 @@ export default function FeedScreen() {
           <View style={styles.headerRight}>
             {/* Flame streak pill */}
             <View style={styles.flamePill}>
-              <Text style={styles.flameText}>🔥 3 {t.feed.streakDays}</Text>
+              <Text style={styles.flameText}>🔥 {currentStreak} {t.feed.streakDays}</Text>
             </View>
             {/* Sort icon */}
             <TouchableOpacity activeOpacity={0.7} hitSlop={8}>

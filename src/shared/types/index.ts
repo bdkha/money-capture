@@ -1,10 +1,4 @@
-export type Category =
-  | 'Cafe'
-  | 'Ăn uống'
-  | 'Mua sắm'
-  | 'Đi lại'
-  | 'Vui chơi'
-  | 'Nhà';
+export type Category = string;
 
 export const CATEGORIES: Category[] = [
   'Cafe',
@@ -14,6 +8,17 @@ export const CATEGORIES: Category[] = [
   'Vui chơi',
   'Nhà',
 ];
+
+export type CategoryKind = 'default' | 'custom';
+
+export interface AppCategory {
+  id: string;
+  key: string;       // i18n key cho default (e.g. 'cafe'), display name cho custom
+  kind: CategoryKind;
+  emoji: string;
+  color: string;
+  sortOrder: number;
+}
 
 export type Mood = '😊' | '😋' | '😂' | '😤' | '😴';
 
