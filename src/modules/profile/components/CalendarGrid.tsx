@@ -19,13 +19,14 @@ interface CalendarGridProps {
   activeDates: Set<string>;
   expenseCountByDate: Record<string, number>;
   photoByDate?: Record<string, string>;
+  photoCountByDate?: Record<string, number>;
   month?: Date;
 }
 
 const CARD_PADDING = 16;
 const GAP = 4;
 
-export default function CalendarGrid({ activeDates, expenseCountByDate, photoByDate, month }: CalendarGridProps) {
+export default function CalendarGrid({ activeDates, expenseCountByDate, photoByDate, photoCountByDate, month }: CalendarGridProps) {
   const colors = useColors();
   const { t } = useI18n();
   const { width } = useWindowDimensions();
@@ -120,6 +121,7 @@ export default function CalendarGrid({ activeDates, expenseCountByDate, photoByD
             const bg = getCellBg(dateStr, count, isFuture);
 
             const photo = photoByDate?.[dateStr];
+            const photoCount = photoCountByDate?.[dateStr] ?? 0;
             return (
               <View
                 key={dateStr}
@@ -130,11 +132,18 @@ export default function CalendarGrid({ activeDates, expenseCountByDate, photoByD
                 ]}
               >
                 {photo ? (
-                  <Image
-                    source={{ uri: photo }}
-                    style={StyleSheet.absoluteFill}
-                    resizeMode="cover"
-                  />
+                  <>
+                    <Image
+                      source={{ uri: photo }}
+                      style={StyleSheet.absoluteFill}
+                      resizeMode="cover"
+                    />
+                    {photoCount >= 2 && (
+                      <View style={styles.photoCountOverlay}>
+                        <Text style={styles.photoCountText}>{photoCount}</Text>
+                      </View>
+                    )}
+                  </>
                 ) : null}
               </View>
             );
@@ -187,6 +196,17 @@ function makeStyles(c: ColorTokens) {
     todayCell: {
       borderWidth: 2,
       borderColor: c.orange,
+    },
+    photoCountOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    photoCountText: {
+      color: '#FFFFFF',
+      fontSize: 12,
+      fontFamily: FontNames.bodySemi,
     },
   });
 }
