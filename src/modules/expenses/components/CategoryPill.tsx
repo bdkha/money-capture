@@ -10,28 +10,6 @@ interface CategoryPillProps {
   onPress: () => void;
 }
 
-function makeStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    pill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderRadius: Radii.full,
-      borderWidth: 1.5,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      gap: 4,
-      marginRight: 8,
-    },
-    emoji: {
-      fontSize: 14,
-    },
-    label: {
-      fontFamily: FontNames.bodySemi,
-      fontSize: 13,
-    },
-  });
-}
-
 export default function CategoryPill({ category, selected, onPress }: CategoryPillProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -67,4 +45,26 @@ export default function CategoryPill({ category, selected, onPress }: CategoryPi
       </Text>
     </TouchableOpacity>
   );
+}
+
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: Radii.full,
+      borderWidth: 1.5,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      gap: 4,
+      marginRight: 8,
+    },
+    emoji: {
+      fontSize: 14,
+    },
+    label: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 13,
+    },
+  });
 }

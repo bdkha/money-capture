@@ -13,38 +13,6 @@ interface MoodPickerProps {
   onChange: (mood: Mood) => void;
 }
 
-function makeStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    container: {
-      alignItems: 'center',
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.sm,
-    },
-    row: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-      justifyContent: 'center',
-    },
-    button: {
-      width: 36,
-      height: 36,
-      borderRadius: Radii.full,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    emoji: {
-      fontSize: 18,
-    },
-    label: {
-      fontFamily: FontNames.body,
-      fontSize: 12,
-      lineHeight: 17,
-      color: c.inkTextSecondary,
-      marginTop: Spacing.xs,
-    },
-  });
-}
-
 export default function MoodPicker({ selected, onChange }: MoodPickerProps) {
   const colors = useColors();
   const { t } = useI18n();
@@ -88,4 +56,36 @@ export default function MoodPicker({ selected, onChange }: MoodPickerProps) {
       <Text style={styles.label}>{t.mood.label}</Text>
     </View>
   );
+}
+
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      justifyContent: 'center',
+    },
+    button: {
+      width: 36,
+      height: 36,
+      borderRadius: Radii.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emoji: {
+      fontSize: 18,
+    },
+    label: {
+      fontFamily: FontNames.body,
+      fontSize: 12,
+      lineHeight: 17,
+      color: c.inkTextSecondary,
+      marginTop: Spacing.xs,
+    },
+  });
 }

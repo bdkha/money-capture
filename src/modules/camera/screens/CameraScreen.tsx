@@ -127,7 +127,7 @@ export default function CameraScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
       if (photo?.uri) {
         let cropW: number, cropH: number, originX: number, originY: number;
         if (isReceiptMode) {
@@ -145,7 +145,7 @@ export default function CameraScreen() {
         const cropped = await ImageManipulator.manipulateAsync(
           photo.uri,
           [{ crop: { originX, originY, width: cropW, height: cropH } }],
-          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+          { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG },
         );
         await AsyncStorage.setItem(LAST_CAPTURE_KEY, cropped.uri);
         setLastUri(cropped.uri);
