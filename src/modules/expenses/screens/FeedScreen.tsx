@@ -30,80 +30,6 @@ function sectionTitle(dateStr: string, t: Strings): string {
   return format(d, "d 'tháng' M", { locale: vi });
 }
 
-function makeStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: c.ink0,
-    },
-    header: {
-      paddingHorizontal: Spacing.lg,
-      paddingBottom: Spacing.md,
-    },
-    headerRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    titleText: {
-      fontFamily: FontNames.title,
-      fontSize: 22,
-      color: c.inkTextPrimary,
-    },
-    totalText: {
-      fontFamily: FontNames.amount,
-      fontSize: 28,
-      color: c.orange,
-    },
-    headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    flamePill: {
-      backgroundColor: c.ink1,
-      borderRadius: Radii.full,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-    },
-    flameText: {
-      fontFamily: FontNames.body,
-      fontSize: 12,
-      lineHeight: 17,
-      color: c.inkTextSecondary,
-    },
-    scrollContent: {
-      paddingHorizontal: Spacing.lg,
-    },
-    sectionLabel: {
-      fontFamily: FontNames.bodySemi,
-      fontSize: 13,
-      color: c.inkTextSecondary,
-      marginTop: Spacing.md,
-      marginBottom: Spacing.sm,
-    },
-    emptyContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingTop: 80,
-      gap: Spacing.md,
-    },
-    emptyTitle: {
-      fontFamily: FontNames.title,
-      fontSize: 22,
-      color: c.inkTextPrimary,
-      textAlign: 'center',
-    },
-    emptyBody: {
-      fontFamily: FontNames.body,
-      fontSize: 15,
-      lineHeight: 22,
-      color: c.inkTextSecondary,
-      textAlign: 'center',
-    },
-  });
-}
-
 export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
@@ -222,4 +148,78 @@ export default function FeedScreen() {
       </ScrollView>
     </View>
   );
+}
+
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.ink0,
+    },
+    header: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.md,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    titleText: {
+      fontFamily: FontNames.title,
+      fontSize: 22,
+      color: c.inkTextPrimary,
+    },
+    totalText: {
+      fontFamily: FontNames.amount,
+      fontSize: 28,
+      color: c.orange,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    flamePill: {
+      backgroundColor: c.ink1,
+      borderRadius: Radii.full,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    flameText: {
+      fontFamily: FontNames.body,
+      fontSize: 12,
+      lineHeight: 17,
+      color: c.inkTextSecondary,
+    },
+    scrollContent: {
+      paddingHorizontal: Spacing.lg,
+    },
+    sectionLabel: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 13,
+      color: c.inkTextSecondary,
+      marginTop: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 80,
+      gap: Spacing.md,
+    },
+    emptyTitle: {
+      fontFamily: FontNames.title,
+      fontSize: 22,
+      color: c.inkTextPrimary,
+      textAlign: 'center',
+    },
+    emptyBody: {
+      fontFamily: FontNames.body,
+      fontSize: 15,
+      lineHeight: 22,
+      color: c.inkTextSecondary,
+      textAlign: 'center',
+    },
+  });
 }

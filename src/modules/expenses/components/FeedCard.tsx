@@ -23,6 +23,88 @@ interface FeedCardProps {
 
 const CARD_WIDTH = Dimensions.get('window').width - Spacing.lg * 2;
 
+export default function FeedCard({ expense, onDelete }: FeedCardProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const meta = CATEGORY_META[expense.category];
+
+  const handleLongPress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onDelete();
+  };
+
+  return (
+    <View style={styles.wrapper}>
+      {/* Card with photo */}
+      <TouchableOpacity
+        activeOpacity={0.95}
+        onLongPress={handleLongPress}
+        style={styles.card}
+      >
+        {/* Full-screen photo */}
+        <Image
+          source={{ uri: expense.photoUri }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        />
+
+        {/* Category pill - top left */}
+        <View
+          style={[
+            styles.categoryPill,
+            {
+              backgroundColor: `${meta.color}33`,
+              borderColor: `${meta.color}66`,
+            },
+          ]}
+        >
+          <Text style={styles.categoryEmoji}>{meta.emoji}</Text>
+          <Text style={[styles.categoryLabel, { color: meta.color }]}>
+            {expense.category}
+          </Text>
+        </View>
+
+        {/* Time pill - top right */}
+        <View style={styles.timePill}>
+          <Text style={styles.timeText}>
+            {format(parseISO(expense.createdAt), 'HH:mm')}
+          </Text>
+        </View>
+
+        {/* Bottom gradient overlay — always dark (photo overlay) */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.75)']}
+          style={styles.gradient}
+          pointerEvents="none"
+        />
+
+        {/* Bottom info row */}
+        <View style={styles.bottomRow}>
+          <View style={styles.bottomLeft}>
+            <Text style={styles.merchantText} numberOfLines={1}>
+              {expense.note || expense.category}
+            </Text>
+            <Text style={styles.amountText}>{formatVND(expense.amount)}</Text>
+          </View>
+          {expense.mood ? (
+            <Text style={styles.moodEmoji}>{expense.mood}</Text>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+
+      {/* Reaction stub below card */}
+      <View style={styles.reactionRow}>
+        <Text style={styles.reactionText}>❤️ 2</Text>
+        <Text style={styles.reactionText}>🤤 1</Text>
+        <TouchableOpacity style={styles.addReactionButton} activeOpacity={0.7}>
+          <Ionicons name="add" size={14} color={colors.inkTextSecondary} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 function makeStyles(c: ColorTokens) {
   return StyleSheet.create({
     wrapper: {
@@ -129,86 +211,4 @@ function makeStyles(c: ColorTokens) {
       justifyContent: 'center',
     },
   });
-}
-
-export default function FeedCard({ expense, onDelete }: FeedCardProps) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-
-  const meta = CATEGORY_META[expense.category];
-
-  const handleLongPress = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onDelete();
-  };
-
-  return (
-    <View style={styles.wrapper}>
-      {/* Card with photo */}
-      <TouchableOpacity
-        activeOpacity={0.95}
-        onLongPress={handleLongPress}
-        style={styles.card}
-      >
-        {/* Full-screen photo */}
-        <Image
-          source={{ uri: expense.photoUri }}
-          style={StyleSheet.absoluteFill}
-          resizeMode="cover"
-        />
-
-        {/* Category pill - top left */}
-        <View
-          style={[
-            styles.categoryPill,
-            {
-              backgroundColor: `${meta.color}33`,
-              borderColor: `${meta.color}66`,
-            },
-          ]}
-        >
-          <Text style={styles.categoryEmoji}>{meta.emoji}</Text>
-          <Text style={[styles.categoryLabel, { color: meta.color }]}>
-            {expense.category}
-          </Text>
-        </View>
-
-        {/* Time pill - top right */}
-        <View style={styles.timePill}>
-          <Text style={styles.timeText}>
-            {format(parseISO(expense.createdAt), 'HH:mm')}
-          </Text>
-        </View>
-
-        {/* Bottom gradient overlay — always dark (photo overlay) */}
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.75)']}
-          style={styles.gradient}
-          pointerEvents="none"
-        />
-
-        {/* Bottom info row */}
-        <View style={styles.bottomRow}>
-          <View style={styles.bottomLeft}>
-            <Text style={styles.merchantText} numberOfLines={1}>
-              {expense.note || expense.category}
-            </Text>
-            <Text style={styles.amountText}>{formatVND(expense.amount)}</Text>
-          </View>
-          {expense.mood ? (
-            <Text style={styles.moodEmoji}>{expense.mood}</Text>
-          ) : null}
-        </View>
-      </TouchableOpacity>
-
-      {/* Reaction stub below card */}
-      <View style={styles.reactionRow}>
-        <Text style={styles.reactionText}>❤️ 2</Text>
-        <Text style={styles.reactionText}>🤤 1</Text>
-        <TouchableOpacity style={styles.addReactionButton} activeOpacity={0.7}>
-          <Ionicons name="add" size={14} color={colors.inkTextSecondary} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
 }

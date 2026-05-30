@@ -11,36 +11,6 @@ interface CategoryPickerProps {
   onChange: (category: Category) => void;
 }
 
-function makeStyles(c: ColorTokens) {
-  return StyleSheet.create({
-    scroll: {
-      flexGrow: 0,
-    },
-    content: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      alignItems: 'center',
-    },
-    stubPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderRadius: Radii.full,
-      borderWidth: 1.5,
-      borderColor: c.inkTextSecondary,
-      borderStyle: 'dashed',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      marginRight: 8,
-      backgroundColor: 'transparent',
-    },
-    stubText: {
-      fontFamily: FontNames.bodySemi,
-      fontSize: 13,
-      color: c.inkTextSecondary,
-    },
-  });
-}
-
 export default function CategoryPicker({ selected, onChange }: CategoryPickerProps) {
   const colors = useColors();
   const { t } = useI18n();
@@ -78,4 +48,34 @@ export default function CategoryPicker({ selected, onChange }: CategoryPickerPro
       </TouchableOpacity>
     </ScrollView>
   );
+}
+
+function makeStyles(c: ColorTokens) {
+  return StyleSheet.create({
+    scroll: {
+      flexGrow: 0,
+    },
+    content: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      alignItems: 'center',
+    },
+    stubPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: Radii.full,
+      borderWidth: 1.5,
+      borderColor: c.inkTextSecondary,
+      borderStyle: 'dashed',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      marginRight: 8,
+      backgroundColor: 'transparent',
+    },
+    stubText: {
+      fontFamily: FontNames.bodySemi,
+      fontSize: 13,
+      color: c.inkTextSecondary,
+    },
+  });
 }
