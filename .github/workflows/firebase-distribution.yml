@@ -1,0 +1,144 @@
+name: Build & Firebase Distribution
+
+# Builds the Android (.apk) and iOS (.ipa) artifacts on EAS Cloud, then uploads
+# them to Firebase App Distribution.
+#
+# Required configuration (added as repository secrets / variables — see
+# docs/guide/FIREBASE_DISTRIBUTION.md). The "config files tôi sẽ thêm sau":
+#   Secrets:
+#     EXPO_TOKEN                 - Expo access token (eas auth)
+#     FIREBASE_SERVICE_ACCOUNT   - Firebase service-account JSON (full contents)
+#     FIREBASE_ANDROID_APP_ID    - Firebase App ID for the Android app
+#     FIREBASE_IOS_APP_ID        - Firebase App ID for the iOS app
+#   Variables (optional):
+#     FIREBASE_TESTER_GROUPS     - Comma-separated tester groups (default: testers)
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform to build & distribute"
+        type: choice
+        options:
+          - all
+          - android
+          - ios
+        default: all
+      profile:
+        description: "EAS build profile"
+        type: string
+        default: firebase
+  push:
+    branches:
+      - main
+
+# Avoid overlapping distribution runs.
+concurrency:
+  group: firebase-distribution-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  EAS_PROFILE: ${{ github.event.inputs.profile || 'firebase' }}
+  PLATFORM: ${{ github.event.inputs.platform || 'all' }}
+  TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'testers' }}
+
+jobs:
+  android:
+    name: Android → Firebase
+    if: ${{ (github.event.inputs.platform || 'all') == 'all' || (github.event.inputs.platform || 'all') == 'android' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Android (APK) on EAS
+        run: |
+          eas build \
+            --platform android \
+            --profile "$EAS_PROFILE" \
+            --non-interactive \
+            --wait \
+            --json > android-build.json
+          APK_URL=$(jq -r '.[0].artifacts.applicationArchiveUrl' android-build.json)
+          if [ -z "$APK_URL" ] || [ "$APK_URL" = "null" ]; then
+            echo "::error::Could not resolve Android artifact URL from EAS build output"
+            cat android-build.json
+            exit 1
+          fi
+          echo "Downloading APK from $APK_URL"
+          curl -fSL -o app.apk "$APK_URL"
+
+      - name: Distribute Android to Firebase
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: ${{ env.TESTER_GROUPS }}
+          releaseNotes: |
+            Build from ${{ github.sha }} on ${{ github.ref_name }}
+          file: app.apk
+
+  ios:
+    name: iOS → Firebase
+    if: ${{ (github.event.inputs.platform || 'all') == 'all' || (github.event.inputs.platform || 'all') == 'ios' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build iOS (IPA) on EAS
+        run: |
+          eas build \
+            --platform ios \
+            --profile "$EAS_PROFILE" \
+            --non-interactive \
+            --wait \
+            --json > ios-build.json
+          IPA_URL=$(jq -r '.[0].artifacts.applicationArchiveUrl' ios-build.json)
+          if [ -z "$IPA_URL" ] || [ "$IPA_URL" = "null" ]; then
+            echo "::error::Could not resolve iOS artifact URL from EAS build output"
+            cat ios-build.json
+            exit 1
+          fi
+          echo "Downloading IPA from $IPA_URL"
+          curl -fSL -o app.ipa "$IPA_URL"
+
+      - name: Distribute iOS to Firebase
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_IOS_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: ${{ env.TESTER_GROUPS }}
+          releaseNotes: |
+            Build from ${{ github.sha }} on ${{ github.ref_name }}
+          file: app.ipa
