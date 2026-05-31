@@ -12,7 +12,8 @@ and uploads the artifacts to **Firebase App Distribution** via GitHub Actions.
 
 - **Manually**: GitHub → *Actions* → *Build & Firebase Distribution* → *Run workflow*.
   Choose the platform (`all` / `android` / `ios`) and the EAS profile.
-- **Automatically**: on every push to `main`.
+- **Automatically**: only when changes are merged/pushed to `main`. It does not
+  run on feature branches or pull requests.
 
 Each job:
 1. `eas build --platform <p> --profile firebase --wait --json` (build on EAS Cloud)
@@ -40,10 +41,9 @@ Add these under **Settings → Secrets and variables → Actions**.
 
 ## One-time prerequisites
 
-1. **Expo / EAS project** — link the project once locally:
-   ```bash
-   npx eas-cli@latest init        # sets expo.owner + a project id
-   ```
+1. **Expo / EAS project** — already linked (`expo.owner = bdk23`,
+   `extra.eas.projectId` set in `app.json`). Nothing to do unless you move the
+   project to a different Expo account.
 2. **iOS credentials** — EAS manages the signing cert & ad-hoc provisioning
    profile. The first iOS build will prompt for Apple credentials; run it once
    interactively, or pre-provision:
@@ -57,8 +57,8 @@ Add these under **Settings → Secrets and variables → Actions**.
    ```
 3. **Android signing** — handled automatically by EAS (a keystore is generated
    and stored on EAS the first time).
-4. **Firebase apps** — create the Android (`com.moneycat.app`) and iOS
-   (`com.moneycat.app`) apps in the Firebase Console and create at least one
+4. **Firebase apps** — create the Android (`com.bdkha.moneycat`) and iOS
+   (`com.bdkha.moneycat`) apps in the Firebase Console and create at least one
    tester group.
 
 > Note: For App Distribution alone you do **not** need `google-services.json` /
